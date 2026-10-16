@@ -290,3 +290,6 @@ const KIT = [
   ["Livrable & recueil", ["Trame du projet de santé", "Recueil de la voix des usagers", "Relevé de décisions"]],
   ["Sécurisation & suite", ["Check-list SISA", "Grille de conformité ARS", "Faire vivre son projet de santé"]]
 ];
+
+/* Réception des envois : formulaire Jotform (serveurs UE) → SharePoint */
+const JOTFORM = { id: "262886164559372", submit: "https://eu-submit.jotform.com/submit/262886164559372/" };

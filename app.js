@@ -469,7 +469,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
         <a class="btn ghost" href="mailto:${esc(st.m.email || "")}?subject=${encodeURIComponent("Note d'inter-session — atelier " + s.num + " — MSP " + (st.m.msp || ""))}">✉ Préparer l'e-mail</a>
         <a class="btn ghost" href="#${s.id}/releve">← Compléter le relevé</a>
       </div>
-      <div class="note-preview" id="notebox">${noteHTML(s)}</div>`;
+      <div class="note-preview" id="notebox">${noteHTML(s)}</div>${sendCard(s.id)}`;
   }
 
   /* --- Projet de santé compilé --- */
@@ -528,7 +528,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     const sc = confScore();
     return `<div class="stephead" style="--c:var(--bleu)"><div class="num">📄</div><div><h2>Projet de santé — ${esc(st.m.msp || "MSP")}</h2><p>Compilé automatiquement à partir de toutes les séances, dans la structure de la trame FEMAS. Les zones orange restent à compléter.</p></div><div class="prog"><b>${sc.pct} %</b><div class="bar"><i style="width:${sc.pct}%"></i></div><small>conformité ARS</small></div></div>
     <div class="row noprint" style="margin-bottom:12px"><button class="btn" data-export-projet>⬇ Télécharger en Word</button><button class="btn ghost" onclick="window.print()">🖨 Imprimer / PDF</button><a class="btn ghost" href="#conformite">Vérifier la conformité →</a></div>
-    <div class="card note-preview" style="max-height:none">${projetHTML(false)}</div>`;
+    ${sendCard("complet")}<div class="card note-preview" style="max-height:none;margin-top:16px">${projetHTML(false)}</div>`;
   }
 
   /* --- Conformité ARS --- */
@@ -600,10 +600,77 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
       <div class="card"><h4>Gérer le dossier</h4>
         <p><b>${esc(st.m.msp || "MSP sans nom")}</b></p>
         <div class="row"><button class="btn ghost" data-dup>Dupliquer</button><button class="btn ghost" data-del-dossier style="color:var(--err)">Supprimer ce dossier</button></div>
-        <h4 style="margin-top:14px">Confidentialité</h4><p class="muted" style="font-size:13.5px">Aucune donnée n'est envoyée sur un serveur. Ne saisissez aucune donnée identifiant un patient (verbatims anonymisés).</p>
+        <h4 style="margin-top:14px">Confidentialité</h4><p class="muted" style="font-size:13.5px">Les données sont enregistrées dans ce navigateur. Elles ne sont transmises à la FEMAS que lorsque vous cliquez sur « Envoyer à la FEMAS » (hébergement UE). Ne saisissez aucune donnée identifiant un patient (verbatims anonymisés).</p>
       </div>
     </div>
+    ${sendCard("complet")}
     <h3 style="margin-top:22px">Catalogue des outils d'animation</h3><div class="grid g2">${bySeance}</div>`;
+  }
+
+
+  /* ---------------- ENVOI À LA FEMAS (Jotform) ---------------- */
+  function sendCard(defaultEtape) {
+    const last = (st.m.envois || []).slice(-1)[0];
+    const opts = [["complet", "Dossier complet"]].concat(SEANCES.map((s) => [s.id, s.id === "s0" ? "Préparation" : "Séance " + s.num + " — " + s.titre]));
+    return `<div class="card sendcard noprint" style="border:2px solid var(--rose);margin-top:16px">
+      <div class="eyebrow">Envoyer à la FEMAS Hauts-de-France</div>
+      <h3 style="margin:.2em 0 .6em">Transmettre le dossier en un clic</h3>
+      <div class="cols2">
+        <div class="f"><label>Votre nom et fonction</label><input type="text" data-m="expediteur" value="${esc(st.m.expediteur || "")}" placeholder="ex. Marie D., coordinatrice"></div>
+        <div class="f"><label>E-mail de contact</label><input type="email" data-m="email" value="${esc(st.m.email || "")}"></div>
+        <div class="f"><label>Ce que vous envoyez</label><select id="sendEtape">${opts.map(([v, l]) => `<option value="${v}" ${v === (defaultEtape || "complet") ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></div>
+        <div class="f"><label>&nbsp;</label><button class="btn rose huge" data-send>📨 Envoyer à la FEMAS</button></div>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin:0">Sont transmis : le nom de la MSP, l'expéditeur, l'avancement, un résumé de l'étape, le dossier complet (.json) et le projet de santé (Word). Les données sont hébergées dans l'Union européenne et utilisées par la FEMAS HDF pour l'accompagnement. <b>Aucune donnée patient.</b></p>
+      <div id="sendRes" style="margin-top:8px;font-weight:600">${last ? `<span style="color:var(--ok)">Dernier envoi : ${esc(new Date(last.date).toLocaleString("fr-FR"))} (${esc(last.etape)})</span>` : ""}</div>
+    </div>`;
+  }
+  function resumeText(etape) {
+    const L = [];
+    const ids = etape === "complet" ? SEANCES.map((s) => s.id) : [etape];
+    ids.forEach((sid) => {
+      const s = SEQ[sid], r = st.r[sid] || {};
+      const dec = (r.decisions || "").trim(), acts = (r.actions || []).filter((a) => filled(a.quoi));
+      if (!dec && !acts.length && etape === "complet") return;
+      L.push("== " + s.long + " (" + progress(sid) + " %) ==");
+      if (dec) L.push("Décisions :\n" + dec);
+      if (acts.length) L.push("Actions :\n" + acts.map((a) => "- [P" + (a.prio || 1) + "] " + a.quoi + (a.qui ? " — " + a.qui : "") + (a.quand ? " (" + a.quand + ")" : "") + (a.fait ? " ✓" : "")).join("\n"));
+      if (r.suspens) L.push("En suspens : " + r.suspens);
+    });
+    const axes = ["s2_axe1", "s2_axe2", "s2_axe3"].map((k) => st.f[k]).filter(filled);
+    if (axes.length) L.push("Axes prioritaires : " + axes.join(" | "));
+    return L.join("\n\n") || "(pas encore de relevé de décisions)";
+  }
+  async function sendFemas() {
+    const res = $("#sendRes"), btn = $("[data-send]");
+    if (!filled(st.m.msp)) { res.innerHTML = `<span style="color:var(--err)">Renseignez d'abord le nom de la MSP (onglet Dossier).</span>`; return; }
+    if (!filled(st.m.expediteur)) { res.innerHTML = `<span style="color:var(--err)">Indiquez votre nom.</span>`; return; }
+    const etape = $("#sendEtape").value;
+    const etapeLbl = $("#sendEtape").selectedOptions[0].textContent;
+    btn.disabled = true; res.innerHTML = "Envoi en cours…";
+    const sc = confScore();
+    const slug = (st.m.msp || "msp").replace(/[^\w-]+/g, "-");
+    const docHTML = `<html><head><meta charset="utf-8"></head><body>${projetHTML(true)}</body></html>`;
+    const fd = new FormData();
+    const id = JOTFORM.id;
+    fd.append("formID", id); fd.append("simple_spc", id + "-" + id); fd.append("submitSource", "form"); fd.append("buildDate", String(Date.now()));
+    const put = (q, v) => fd.append(q, v == null ? "" : String(v));
+    put("q2_msp", st.m.msp); put("q3_commune", st.m.commune); put("q4_expediteur", st.m.expediteur); put("q5_email", st.m.email);
+    put("q6_etape", etapeLbl); put("q7_profil", profil() ? profil() + " — " + PROFILS[profil()].nom : "non défini"); put("q8_statut", st.m.statut);
+    put("q9_avancement", SEANCES.map((s) => (s.id === "s0" ? "Prépa" : "S" + s.num) + " " + progress(s.id) + "%").join(" · "));
+    put("q10_conformite", sc.pres + "/" + sc.tot + " présents · " + sc.conf + "/" + sc.tot + " conformes");
+    put("q11_dossierId", st.id); put("q12_resume", resumeText(etape));
+    fd.append("q13_fichiers[]", new Blob([JSON.stringify({ version: 1, dossiers: { [st.id]: st } }, null, 2)], { type: "application/json" }), "dossier-" + slug + ".json");
+    fd.append("q13_fichiers[]", new Blob(["\ufeff", docHTML], { type: "application/msword" }), "projet-de-sante-" + slug + ".doc");
+    try {
+      await fetch(JOTFORM.submit, { method: "POST", body: fd, mode: "no-cors" });
+      (st.m.envois = st.m.envois || []).push({ date: new Date().toISOString(), etape: etapeLbl });
+      save(true);
+      res.innerHTML = `<span style="color:var(--ok)">✓ Envoyé à la FEMAS (${esc(etapeLbl)}). Merci !</span>`;
+    } catch (e) {
+      res.innerHTML = `<span style="color:var(--err)">Échec de l'envoi (connexion ?). Réessayez ou exportez le dossier depuis l'onglet Outils.</span>`;
+    }
+    btn.disabled = false;
   }
 
   /* ---------------- EXPORTS ---------------- */
@@ -695,11 +762,12 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     save(); updateProgress(); renderNav();
   });
   app.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-tab],[data-tool],[data-add-fiche],[data-del-fiche],[data-add-pro],[data-del-pro],[data-add-act],[data-del-act],[data-timer],[data-timer-reset],[data-copy-prompt],[data-import-claude],[data-export-note],[data-copy-note],[data-export-releve],[data-export-projet],[data-export-conf],[data-export-json],[data-del-dossier],[data-dup],[data-open]");
+    const b = e.target.closest("[data-tab],[data-tool],[data-add-fiche],[data-del-fiche],[data-add-pro],[data-del-pro],[data-add-act],[data-del-act],[data-timer],[data-timer-reset],[data-copy-prompt],[data-import-claude],[data-export-note],[data-copy-note],[data-export-releve],[data-export-projet],[data-export-conf],[data-export-json],[data-del-dossier],[data-dup],[data-open],[data-send]");
     if (!b) return;
     const d = b.dataset;
     if (d.tab) { location.hash = d.tab; return; }
     if (d.open) { switchTo(d.open); return; }
+    if (d.send != null) { sendFemas(); return; }
     if (d.tool) { const [sid, id] = d.tool.split(":"); const a = st.o[sid] = st.o[sid] || []; const i = a.indexOf(id); i >= 0 ? a.splice(i, 1) : a.push(id); save(); return rerender(true); }
     if (d.addFiche != null) { st.fiches.push({}); save(); return rerender(true); }
     if (d.delFiche != null) { if (confirm("Supprimer cette fiche-action ?")) { st.fiches.splice(+d.delFiche, 1); save(); rerender(true); } return; }
