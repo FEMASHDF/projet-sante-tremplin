@@ -8,9 +8,16 @@
   const GRIS = "595959", BLEUCL = "DCE3F1", ORANGE = "B45309", FONT = "Arial";
   const W = 9638; // largeur utile A4, marges 2 cm
 
-  async function loadImage(url) {
-    try { const r = await fetch(url, { cache: "force-cache" }); if (!r.ok) return null; return new Uint8Array(await r.arrayBuffer()); }
-    catch (e) { return null; }
+  async function loadImage(urls, maxW, maxH) {
+    for (const url of [].concat(urls)) {
+      try {
+        const r = await fetch(url, { cache: "no-cache" }); if (!r.ok) continue;
+        const blob = await r.blob(); let w = maxW, h = maxH;
+        try { const bm = await createImageBitmap(blob); const k = Math.min(maxW / bm.width, maxH / bm.height); w = Math.round(bm.width * k); h = Math.round(bm.height * k); } catch (e) {}
+        return { data: new Uint8Array(await blob.arrayBuffer()), w, h };
+      } catch (e) {}
+    }
+    return null;
   }
 
   window.buildProjetDocx = async function (ctx) {
@@ -57,11 +64,11 @@
     });
     const spacer = () => new Paragraph({ children: [], spacing: { after: 120 } });
 
-    const [femas, tremplin] = await Promise.all([loadImage("femas-logo.jpg"), loadImage("logo-tremplin.png")]);
+    const [femas, tremplin] = await Promise.all([loadImage(["femas-logo.jpg", "Logo FEMAS HDF.png"], 170, 170), loadImage("logo-tremplin.png", 130, 130)]);
     const logos = [];
-    if (femas) logos.push(new ImageRun({ data: femas, transformation: { width: 220, height: 110 } }));
+    if (femas) logos.push(new ImageRun({ data: femas.data, transformation: { width: femas.w, height: femas.h } }));
     if (femas && tremplin) logos.push(run("      "));
-    if (tremplin) logos.push(new ImageRun({ data: tremplin, transformation: { width: 120, height: 120 } }));
+    if (tremplin) logos.push(new ImageRun({ data: tremplin.data, transformation: { width: tremplin.w, height: tremplin.h } }));
 
     const C = [];
     /* ---- Couverture ---- */
