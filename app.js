@@ -650,7 +650,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     btn.disabled = true; res.innerHTML = "Envoi en cours…";
     const sc = confScore();
     const slug = (st.m.msp || "msp").replace(/[^\w-]+/g, "-");
-    const docHTML = `<html><head><meta charset="utf-8"></head><body>${projetHTML(true)}</body></html>`;
+    const pj = await projetBlob();
     const fd = new FormData();
     const id = JOTFORM.id;
     fd.append("formID", id); fd.append("simple_spc", id + "-" + id); fd.append("submitSource", "form"); fd.append("buildDate", String(Date.now()));
@@ -661,7 +661,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     put("q10_conformite", sc.pres + "/" + sc.tot + " présents · " + sc.conf + "/" + sc.tot + " conformes");
     put("q11_dossierId", st.id); put("q12_resume", resumeText(etape));
     fd.append("q13_fichiers[]", new Blob([JSON.stringify({ version: 1, dossiers: { [st.id]: st } }, null, 2)], { type: "application/json" }), "dossier-" + slug + ".json");
-    fd.append("q13_fichiers[]", new Blob(["\ufeff", docHTML], { type: "application/msword" }), "projet-de-sante-" + slug + ".doc");
+    fd.append("q13_fichiers[]", pj.blob, "projet-de-sante-" + slug + pj.ext);
     try {
       await fetch(JOTFORM.submit, { method: "POST", body: fd, mode: "no-cors" });
       (st.m.envois = st.m.envois || []).push({ date: new Date().toISOString(), etape: etapeLbl });
@@ -673,6 +673,22 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     btn.disabled = false;
   }
 
+
+  async function projetBlob() {
+    if (window.buildProjetDocx && window.docx) {
+      try { return { blob: await window.buildProjetDocx({ st, FICHE_CHAMPS, fmtDate }), ext: ".docx" }; } catch (e) { console.error(e); }
+    }
+    const html = `<html><head><meta charset="utf-8"></head><body>${projetHTML(true)}</body></html>`;
+    return { blob: new Blob(["\ufeff", html], { type: "application/msword" }), ext: ".doc" };
+  }
+  async function exportProjetDocx(btn) {
+    const lbl = btn.textContent; btn.disabled = true; btn.textContent = "Génération…";
+    const { blob, ext } = await projetBlob();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = ("Projet de sante - " + (st.m.msp || "MSP")).replace(/[\\/:*?"<>|]/g, "-") + ext;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    btn.disabled = false; btn.textContent = lbl;
+  }
   /* ---------------- EXPORTS ---------------- */
   function downloadDoc(name, body) {
     const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${esc(name)}</title>
@@ -787,7 +803,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     if (d.exportNote) { downloadDoc("Note inter-session atelier " + SEQ[d.exportNote].num + " - " + (st.m.msp || "MSP"), noteHTML(SEQ[d.exportNote])); return; }
     if (d.copyNote) { const box = $("#notebox"); copyRich(box.innerHTML, box.innerText); return; }
     if (d.exportReleve) { downloadDoc("Releve de decisions S" + SEQ[d.exportReleve].num + " - " + (st.m.msp || "MSP"), releveHTML(d.exportReleve)); return; }
-    if (d.exportProjet != null) { downloadDoc("Projet de sante - " + (st.m.msp || "MSP"), projetHTML(true)); return; }
+    if (d.exportProjet != null) { exportProjetDocx(b); return; }
     if (d.exportConf != null) { downloadDoc("Grille conformite ARS - " + (st.m.msp || "MSP"), confWord()); return; }
     if (d.exportJson) { const slug = (st.m.msp || "msp").replace(/\s+/g, "-"); if (d.exportJson === "one") downloadJSON("projet-sante-" + slug + "-" + new Date().toISOString().slice(0, 10), { version: 1, dossiers: { [st.id]: st } }); else downloadJSON("projets-sante-toutes-MSP-" + new Date().toISOString().slice(0, 10), { version: 1, dossiers: store.dossiers }); return; }
     if (d.dup != null) { const c = JSON.parse(JSON.stringify(st)); c.id = "msp_" + Date.now().toString(36); c.m.msp = (c.m.msp || "MSP") + " (copie)"; store.dossiers[c.id] = c; switchTo(c.id); return; }
