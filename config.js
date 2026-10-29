@@ -293,3 +293,4 @@ const KIT = [
 
 /* Réception des envois : formulaire Jotform (serveurs UE) → SharePoint */
 const JOTFORM = { id: "262886164559372", submit: "https://eu-submit.jotform.com/submit/262886164559372/" };
+const JOTFORM_EMARG = { id: "263013829432353", submit: "https://eu-submit.jotform.com/submit/263013829432353/" };

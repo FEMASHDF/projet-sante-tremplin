@@ -623,7 +623,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
         <div class="f"><label>Ce que vous envoyez</label><select id="sendEtape">${opts.map(([v, l]) => `<option value="${v}" ${v === (defaultEtape || "complet") ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></div>
         <div class="f"><label>&nbsp;</label><button class="btn rose huge" data-send>📨 Envoyer à la FEMAS</button></div>
       </div>
-      <p class="muted" style="font-size:12.5px;margin:0">Sont transmis : le nom de la MSP, l'expéditeur, l'avancement, un résumé de l'étape, le dossier complet (.json), le projet de santé (Word) et les feuilles d'émargement. Les données sont hébergées dans l'Union européenne et utilisées par la FEMAS HDF pour l'accompagnement. <b>Aucune donnée patient.</b></p>
+      <p class="muted" style="font-size:12.5px;margin:0">Sont transmis : le nom de la MSP, l'expéditeur, l'avancement, un résumé de l'étape, le dossier complet (.json) et le projet de santé (Word). Les feuilles d'émargement sont transmises séparément, dès leur dépôt. Les données sont hébergées dans l'Union européenne et utilisées par la FEMAS HDF pour l'accompagnement. <b>Aucune donnée patient.</b></p>
       <div id="sendRes" style="margin-top:8px;font-weight:600">${last ? `<span style="color:var(--ok)">Dernier envoi : ${esc(new Date(last.date).toLocaleString("fr-FR"))} (${esc(last.etape)})</span>` : ""}</div>
     </div>`;
   }
@@ -664,10 +664,6 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     put("q11_dossierId", st.id); put("q12_resume", resumeText(etape));
     fd.append("q13_fichiers[]", new Blob([JSON.stringify({ version: 1, dossiers: { [st.id]: st } }, null, 2)], { type: "application/json" }), "dossier-" + slug + ".json");
     fd.append("q13_fichiers[]", pj.blob, "projet-de-sante-" + slug + pj.ext);
-    for (const s of (etape === "complet" ? SEANCES : [SEQ[etape]])) {
-      let ems = []; try { ems = await emargList(s.id); } catch (e) {}
-      ems.forEach((f, i) => fd.append("q13_fichiers[]", f.blob, "emargement-S" + s.num + "-" + slug + (ems.length > 1 ? "-" + (i + 1) : "") + (/pdf/.test(f.type) ? ".pdf" : /png/.test(f.type) ? ".png" : ".jpg")));
-    }
     try {
       await fetch(JOTFORM.submit, { method: "POST", body: fd, mode: "no-cors" });
       (st.m.envois = st.m.envois || []).push({ date: new Date().toISOString(), etape: etapeLbl });
@@ -728,7 +724,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     if (sid === "s0") return "";
     const n = (st.em || {})[sid] || 0;
     return `<div class="box rose emarg"><h4>Émargement de la séance</h4>
-      <p style="font-size:13px;margin:0 0 8px">Photographiez ou scannez la feuille d'émargement papier, puis ajoutez-la ici (image ou PDF).</p>
+      <p style="font-size:13px;margin:0 0 8px">Photographiez ou scannez la feuille d'émargement papier, puis ajoutez-la ici (image ou PDF). Elle est transmise automatiquement à la FEMAS.</p>
       <label class="btn sm rose" style="cursor:pointer">📷 Ajouter une photo / un PDF<input type="file" accept="image/*,application/pdf" multiple data-emarg-upload="${sid}" style="display:none"></label>
       <div class="emarg-list" data-emarg-list="${sid}" style="margin-top:10px">${n ? "Chargement…" : `<span class="muted" style="font-size:13px">Aucune feuille d'émargement pour l'instant.</span>`}</div></div>`;
   }
@@ -739,9 +735,22 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     const html = files.length ? files.map((f) => {
       const url = URL.createObjectURL(f.blob);
       const thumb = /^image\//.test(f.type) ? `<img src="${url}" alt="" style="width:46px;height:46px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">` : `<span style="display:inline-grid;place-items:center;width:46px;height:46px;border-radius:8px;background:#fff;border:1px solid var(--line);font-weight:700;font-size:11px;color:var(--rose)">PDF</span>`;
-      return `<div class="row" style="gap:8px;margin-bottom:6px;flex-wrap:nowrap">${thumb}<div style="flex:1;min-width:0;font-size:12.5px"><a href="${url}" target="_blank" rel="noopener" style="word-break:break-all">${esc(f.name)}</a><br><span class="muted">${new Date(f.date).toLocaleDateString("fr-FR")} · ${Math.round(f.size / 1024)} Ko</span></div><button class="btn sm ghost" data-emarg-del="${f.id}" data-emarg-sid="${sid}" title="Supprimer">✕</button></div>`;
+      return `<div class="row" style="gap:8px;margin-bottom:6px;flex-wrap:nowrap">${thumb}<div style="flex:1;min-width:0;font-size:12.5px"><a href="${url}" target="_blank" rel="noopener" style="word-break:break-all">${esc(f.name)}</a><br><span class="muted">${new Date(f.date).toLocaleDateString("fr-FR")} · ${Math.round(f.size / 1024)} Ko</span><br>${f.sent ? `<span style="color:var(--ok);font-weight:600">✓ transmise à la FEMAS</span>` : `<button class="btn sm rose" style="padding:3px 8px;font-size:12px" data-emarg-resend="${f.id}" data-emarg-sid="${sid}">↻ Renvoyer à la FEMAS</button>`}</div><button class="btn sm ghost" data-emarg-del="${f.id}" data-emarg-sid="${sid}" title="Supprimer">✕</button></div>`;
     }).join("") : `<span class="muted" style="font-size:13px">Aucune feuille d'émargement pour l'instant.</span>`;
     nodes.forEach((n) => n.innerHTML = html);
+  }
+  async function emargSend(rec) {
+    if (typeof JOTFORM_EMARG === "undefined") return false;
+    const s = SEQ[rec.sid], id = JOTFORM_EMARG.id, fd = new FormData();
+    fd.append("formID", id); fd.append("simple_spc", id + "-" + id); fd.append("submitSource", "form"); fd.append("buildDate", String(Date.now()));
+    fd.append("q2_msp", st.m.msp || "MSP sans nom"); fd.append("q3_commune", st.m.commune || "");
+    fd.append("q4_seance", s ? s.long : rec.sid); fd.append("q5_dateSeance", (st.r[rec.sid] && st.r[rec.sid].date) || st.m.dates[rec.sid] || "");
+    fd.append("q6_expediteur", st.m.expediteur || st.m.coord || st.m.porteuse || ""); fd.append("q7_dossierId", st.id); fd.append("q8_fichierId", rec.id);
+    const ext = /pdf/.test(rec.type) ? ".pdf" : /png/.test(rec.type) ? ".png" : /heic/.test(rec.type) ? ".heic" : /webp/.test(rec.type) ? ".webp" : ".jpg";
+    const slug = (st.m.msp || "msp").replace(/[^\w-]+/g, "-");
+    fd.append("q9_feuille[]", rec.blob, "emargement-" + (s ? "S" + s.num : rec.sid) + "-" + slug + ext);
+    try { await fetch(JOTFORM_EMARG.submit, { method: "POST", body: fd, mode: "no-cors" }); rec.sent = new Date().toISOString(); await emargPut(rec); return true; }
+    catch (e) { return false; }
   }
   async function emargUpload(sid, fileList) {
     const files = Array.from(fileList || []); let ok = 0;
@@ -749,10 +758,11 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
       if (!/^image\/|application\/pdf/.test(f0.type)) { toast("Format non accepté : " + f0.name); continue; }
       const f = await compressImage(f0);
       if (f.size > 9.5 * 1024 * 1024) { toast("Fichier trop lourd (max 10 Mo) : " + f0.name); continue; }
-      await emargPut({ id: st.id + ":" + sid + ":" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), dossier: st.id, sid, name: f.name || f0.name, type: f.type, size: f.size, date: new Date().toISOString(), blob: f });
-      ok++;
+      const rec = { id: st.id + ":" + sid + ":" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), dossier: st.id, sid, name: f.name || f0.name, type: f.type, size: f.size, date: new Date().toISOString(), blob: f };
+      await emargPut(rec);
+      if (await emargSend(rec)) ok++; else toast("Envoi impossible pour " + rec.name + " — réessayez avec « Renvoyer »");
     }
-    if (ok) toast(ok + " fichier(s) d'émargement ajouté(s)");
+    if (ok) toast(ok + " feuille(s) d'émargement transmise(s) à la FEMAS");
     refreshEmarg(sid);
   }
   /* ---------------- EXPORTS ---------------- */
@@ -845,13 +855,14 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     save(); updateProgress(); renderNav();
   });
   app.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-tab],[data-tool],[data-add-fiche],[data-del-fiche],[data-add-pro],[data-del-pro],[data-add-act],[data-del-act],[data-timer],[data-timer-reset],[data-copy-prompt],[data-import-claude],[data-export-note],[data-copy-note],[data-export-releve],[data-export-projet],[data-export-conf],[data-export-json],[data-del-dossier],[data-dup],[data-open],[data-send],[data-emarg-del]");
+    const b = e.target.closest("[data-tab],[data-tool],[data-add-fiche],[data-del-fiche],[data-add-pro],[data-del-pro],[data-add-act],[data-del-act],[data-timer],[data-timer-reset],[data-copy-prompt],[data-import-claude],[data-export-note],[data-copy-note],[data-export-releve],[data-export-projet],[data-export-conf],[data-export-json],[data-del-dossier],[data-dup],[data-open],[data-send],[data-emarg-del],[data-emarg-resend]");
     if (!b) return;
     const d = b.dataset;
     if (d.tab) { location.hash = d.tab; return; }
     if (d.open) { switchTo(d.open); return; }
     if (d.send != null) { sendFemas(); return; }
-    if (d.emargDel) { if (confirm("Supprimer cette feuille d'émargement ?")) emargDel(d.emargDel).then(() => refreshEmarg(d.emargSid)); return; }
+    if (d.emargResend) { b.disabled = true; emargGet(d.emargResend).then((rec) => rec && emargSend(rec)).then((ok) => { toast(ok ? "Feuille transmise à la FEMAS" : "Envoi impossible, vérifiez la connexion"); refreshEmarg(d.emargSid); }); return; }
+    if (d.emargDel) { if (confirm("Retirer cette feuille de l'outil ? (La copie déjà transmise à la FEMAS est conservée.)")) emargDel(d.emargDel).then(() => refreshEmarg(d.emargSid)); return; }
     if (d.tool) { const [sid, id] = d.tool.split(":"); const a = st.o[sid] = st.o[sid] || []; const i = a.indexOf(id); i >= 0 ? a.splice(i, 1) : a.push(id); save(); return rerender(true); }
     if (d.addFiche != null) { st.fiches.push({}); save(); return rerender(true); }
     if (d.delFiche != null) { if (confirm("Supprimer cette fiche-action ?")) { st.fiches.splice(+d.delFiche, 1); save(); rerender(true); } return; }
