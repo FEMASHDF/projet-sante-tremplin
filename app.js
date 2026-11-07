@@ -230,7 +230,7 @@
     const tools = Object.entries(OUTILS).filter(([, t]) => t.s === s.id);
     const chosen = st.o[s.id] || [];
     const briefing = ["Fiche animateur transmise au co-animateur", "Rappel de l'objectif de remplissage et de l'encadré « À récupérer »", "Répartition des prises de parole et des temps d'animation", "Points de vigilance spécifiques à l'équipe", "Logistique vérifiée (salle, matériel, Upmeet, imprimés)"];
-    return `
+    return `${equipeCard(s)}
     <div class="grid g2">
       <div>
         <div class="box bleu"><h4>Objectif de la séance</h4>${esc(s.objectif)}<br><br><b>Livrable :</b> ${esc(s.livrable)}</div>
@@ -765,6 +765,63 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     if (ok) toast(ok + " feuille(s) d'émargement transmise(s) à la FEMAS");
     refreshEmarg(sid);
   }
+
+  /* ---------------- FICHE DE PRÉPARATION POUR L'ÉQUIPE ---------------- */
+  function equipeLink(sid) {
+    const u = new URL("equipe.html", location.href); u.search = "";
+    const q = u.searchParams; q.set("s", sid); q.set("d", st.id);
+    if (st.m.msp) q.set("msp", st.m.msp); if (st.m.commune) q.set("c", st.m.commune);
+    if (st.m.dates && st.m.dates[sid]) q.set("date", st.m.dates[sid]);
+    if (sid === "s3") { const ax = ["s2_axe1", "s2_axe2", "s2_axe3"].map((k) => st.f[k]).filter(filled); if (ax.length) q.set("axes", ax.join("|")); }
+    return u.toString();
+  }
+  function equipeCard(s) {
+    if (typeof EQUIPE === "undefined" || !EQUIPE[s.id]) return "";
+    const url = equipeLink(s.id), imp = (st.eq || {})[s.id];
+    const date = st.m.dates && st.m.dates[s.id] ? " du " + new Date(st.m.dates[s.id] + "T12:00").toLocaleDateString("fr-FR") : "";
+    const body = "Bonjour,\n\nAfin de préparer notre prochaine séance d'accompagnement" + date + " (" + s.long + "), nous vous proposons de remplir en équipe cette fiche en ligne :\n" + url + "\n\nRemplissez ce que vous pouvez, même partiellement : ce qui manque sera travaillé ensemble en séance. Vos réponses sont enregistrées au fur et à mesure ; cliquez sur « Envoyer à la FEMAS » une fois terminé.\n\nMerci et à bientôt,\n" + (st.m.porteuse || "") + "\nFEMAS Hauts-de-France";
+    return `<div class="card" style="margin-bottom:16px;border:2px solid var(--c,var(--bleu))">
+      <div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="eyebrow">À envoyer à l'équipe avant la séance</div><h3 style="margin:.2em 0">Fiche de préparation en ligne</h3>
+      <p class="muted" style="margin:0;font-size:13.5px">L'équipe répond en amont à des questions simples. Ses réponses pré-remplissent la trame : ce qui manque sera travaillé en séance.</p></div>
+      ${imp ? `<span class="pill A">✓ Réponses importées le ${new Date(imp).toLocaleDateString("fr-FR")}</span>` : ""}</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn sm" data-copy-eq="${esc(url)}">📋 Copier le lien</button>
+        <a class="btn sm ghost" href="${esc(url)}" target="_blank" rel="noopener">👁 Voir la fiche</a>
+        <a class="btn sm ghost" href="mailto:${esc(st.m.email || "")}?subject=${encodeURIComponent("Préparation de la " + s.long.split(" — ")[0].toLowerCase() + " — projet de santé " + (st.m.msp || ""))}&body=${encodeURIComponent(body)}">✉ Préparer l'e-mail</a>
+        <label class="btn sm vert" style="cursor:pointer">⬇ Importer les réponses de l'équipe (.json)<input type="file" accept=".json,application/json" data-eq-import="${s.id}" style="display:none"></label>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin:8px 0 0">Les réponses arrivent dans Jotform (formulaire « Préparation des séances — équipes MSP »). Téléchargez le fichier .json joint à la réponse, puis importez-le ici : seules les rubriques encore vides sont remplies.</p>
+    </div>`;
+  }
+  function importEquipe(file, expectedSid) {
+    const rd = new FileReader();
+    rd.onload = () => {
+      let d; try { d = JSON.parse(rd.result); } catch (e) { return toast("Fichier illisible"); }
+      if (d.type !== "tremplin-equipe") return toast("Ce fichier n'est pas une fiche de préparation d'équipe");
+      if (d.dossierId && d.dossierId !== st.id && !confirm("Ces réponses viennent de « " + (d.msp || "?") + " », un autre dossier que celui ouvert (« " + (st.m.msp || "MSP sans nom") + " »). Les importer quand même ?")) return;
+      if (expectedSid && d.seance && d.seance !== expectedSid && !confirm("Ce fichier concerne la " + (SEQ[d.seance] ? SEQ[d.seance].long : d.seance) + ". L'importer quand même ?")) return;
+      let n = 0;
+      Object.entries(d.f || {}).forEach(([k, v]) => { if (filled(v) && !filled(st.f[k])) { st.f[k] = v; n++; } });
+      (d.fiches || []).forEach((fi) => {
+        let ex = filled(fi.axe) ? st.fiches.find((x) => (x.axe || "").trim().toLowerCase() === fi.axe.trim().toLowerCase()) : null;
+        if (!ex) ex = st.fiches.find((x) => !Object.values(x).some(filled));
+        if (!ex) { ex = {}; st.fiches.push(ex); }
+        Object.entries(fi).forEach(([k, v]) => { if (filled(v) && !filled(ex[k])) { ex[k] = v; n++; } });
+      });
+      (d.pros || []).forEach((p) => {
+        if (!filled(p.nom)) return;
+        const ex = st.pros.find((x) => (x.nom || "").trim().toLowerCase() === p.nom.trim().toLowerCase());
+        if (ex) ["profession", "rpps", "role"].forEach((k) => { if (filled(p[k]) && !filled(ex[k])) { ex[k] = p[k]; n++; } });
+        else { st.pros.push({ nom: p.nom, profession: p.profession || "", rpps: p.rpps || "", role: p.role || "" }); n++; }
+      });
+      if (!filled(st.m.msp) && filled(d.msp)) st.m.msp = d.msp;
+      if (!filled(st.m.commune) && filled(d.commune)) st.m.commune = d.commune;
+      if (d.seance) { st.eq = st.eq || {}; st.eq[d.seance] = new Date().toISOString(); }
+      save(true); rerender(true);
+      toast(n + " réponse(s) de l'équipe importée(s)" + (d.expediteur ? " (" + d.expediteur + ")" : ""));
+    };
+    rd.readAsText(file);
+  }
   /* ---------------- EXPORTS ---------------- */
   function downloadDoc(name, body) {
     const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${esc(name)}</title>
@@ -849,18 +906,20 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     else if (d.actDone) { const [sid, i] = d.actDone.split("."); relev(sid).actions[+i].fait = t.checked; }
     else if (d.conf) { st.conf[d.conf] = t.checked; save(); return rerender(true); }
     else if (t.id === "importFile") { return importFile(t.files[0]); }
+    else if (d.eqImport) { if (t.files[0]) importEquipe(t.files[0], d.eqImport); t.value = ""; return; }
     else if (d.emargUpload) { emargUpload(d.emargUpload, t.files).then(() => { t.value = ""; }); return; }
     else if (d.m || d.date || d.r || d.act) { save(); if (d.m === "statut") rerender(true); return; }
     else return;
     save(); updateProgress(); renderNav();
   });
   app.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-tab],[data-tool],[data-add-fiche],[data-del-fiche],[data-add-pro],[data-del-pro],[data-add-act],[data-del-act],[data-timer],[data-timer-reset],[data-copy-prompt],[data-import-claude],[data-export-note],[data-copy-note],[data-export-releve],[data-export-projet],[data-export-conf],[data-export-json],[data-del-dossier],[data-dup],[data-open],[data-send],[data-emarg-del],[data-emarg-resend]");
+    const b = e.target.closest("[data-tab],[data-tool],[data-add-fiche],[data-del-fiche],[data-add-pro],[data-del-pro],[data-add-act],[data-del-act],[data-timer],[data-timer-reset],[data-copy-prompt],[data-import-claude],[data-export-note],[data-copy-note],[data-export-releve],[data-export-projet],[data-export-conf],[data-export-json],[data-del-dossier],[data-dup],[data-open],[data-send],[data-emarg-del],[data-emarg-resend],[data-copy-eq]");
     if (!b) return;
     const d = b.dataset;
     if (d.tab) { location.hash = d.tab; return; }
     if (d.open) { switchTo(d.open); return; }
     if (d.send != null) { sendFemas(); return; }
+    if (d.copyEq) { navigator.clipboard.writeText(d.copyEq).then(() => toast("Lien copié : collez-le dans votre message à l'équipe"), () => toast("Copie impossible")); return; }
     if (d.emargResend) { b.disabled = true; emargGet(d.emargResend).then((rec) => rec && emargSend(rec)).then((ok) => { toast(ok ? "Feuille transmise à la FEMAS" : "Envoi impossible, vérifiez la connexion"); refreshEmarg(d.emargSid); }); return; }
     if (d.emargDel) { if (confirm("Retirer cette feuille de l'outil ? (La copie déjà transmise à la FEMAS est conservée.)")) emargDel(d.emargDel).then(() => refreshEmarg(d.emargSid)); return; }
     if (d.tool) { const [sid, id] = d.tool.split(":"); const a = st.o[sid] = st.o[sid] || []; const i = a.indexOf(id); i >= 0 ? a.splice(i, 1) : a.push(id); save(); return rerender(true); }
@@ -901,7 +960,9 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     const rd = new FileReader();
     rd.onload = () => {
       try {
-        const data = JSON.parse(rd.result); const ds = data.dossiers || (data.m ? { [data.id || "msp_" + Date.now().toString(36)]: data } : null);
+        const data = JSON.parse(rd.result);
+        if (data.type === "tremplin-equipe") return importEquipe(file, null);
+        const ds = data.dossiers || (data.m ? { [data.id || "msp_" + Date.now().toString(36)]: data } : null);
         if (!ds) throw new Error();
         let last; Object.values(ds).forEach((d) => { if (!d.id) d.id = "msp_" + Math.random().toString(36).slice(2); ["f", "c", "o", "r", "conf"].forEach((k) => d[k] = d[k] || {}); d.fiches = d.fiches || []; d.pros = d.pros || []; d.m.q = d.m.q || {}; d.m.dates = d.m.dates || {}; store.dossiers[d.id] = d; last = d.id; });
         switchTo(last); toast(Object.keys(ds).length + " dossier(s) importé(s)");

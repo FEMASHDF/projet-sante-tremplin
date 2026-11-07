@@ -294,3 +294,88 @@ const KIT = [
 /* Réception des envois : formulaire Jotform (serveurs UE) → SharePoint */
 const JOTFORM = { id: "262886164559372", submit: "https://eu-submit.jotform.com/submit/262886164559372/" };
 const JOTFORM_EMARG = { id: "263013829432353", submit: "https://eu-submit.jotform.com/submit/263013829432353/" };
+const JOTFORM_EQUIPE = { id: "263096396809371", submit: "https://eu-submit.jotform.com/submit/263096396809371/" };
+
+/* =====================================================================
+   PRÉPARATION PAR L'ÉQUIPE (page equipe.html, à remplir avant chaque séance)
+   k = rubrique de la trame alimentée · q = question posée à l'équipe
+   ===================================================================== */
+const EQUIPE = {
+  s1: {
+    intro: "Avant notre première rencontre, prenez quelques minutes en équipe pour répondre à ces questions. Quelques phrases suffisent : nous les retravaillerons ensemble en séance.",
+    questions: [
+      { k: "s1_histoire", q: "Comment est né votre projet de regroupement ?", help: "Racontez en quelques phrases l'histoire de votre équipe et ce qui vous a donné envie de travailler ensemble." },
+      { k: "s1_motivations", q: "Qu'est-ce qui motive chacun d'entre vous ? Qu'attendez-vous du collectif ?", help: "Vous pouvez faire un rapide tour de table et noter les idées de chacun." },
+      { k: "s1_objectifs", q: "Quels sont, selon vous, les 2 ou 3 objectifs principaux de votre maison de santé ?" },
+      { k: "s1_ambitions", q: "Avez-vous des projets d'évolution ?", help: "Locaux, arrivée de nouveaux professionnels, nouveaux services…" },
+      { k: "s1_pilote", q: "Qui pilote le projet ?", type: "text" },
+      { k: "s1_coordinateur", q: "Qui assure (ou assurera) la coordination ?", type: "text" },
+      { k: "s1_roles", q: "Comment envisagez-vous la répartition des rôles dans le projet ?", help: "Qui s'occupe de quoi : organisation, lien avec les partenaires, suivi des thématiques…" }
+    ],
+    apporter: ["Vos agendas, pour caler les dates des 4 séances suivantes", "La liste des professionnels intéressés par le projet"]
+  },
+  s2: {
+    intro: "Vous avez reçu le diagnostic de votre territoire. Lisez-le, échangez entre vous et notez vos réactions : elles serviront de point de départ à la séance.",
+    questions: [
+      { k: "s2_territoire", q: "Quel chiffre du diagnostic vous a le plus surpris ? Pourquoi ?" },
+      { k: "s2_constats", q: "Qu'est-ce qui correspond à ce que vous vivez au quotidien ? Qu'est-ce qui vous semble décalé ?" },
+      { k: "s2_besoins", q: "Quels sont, selon vous, les besoins de santé prioritaires de vos patients ?" },
+      { k: "s2_usagers", q: "Que disent vos patients ?", help: "Résultats du questionnaire, idées de la boîte à idées, remarques entendues au cabinet (sans nom ni information permettant d'identifier un patient)." },
+      { k: "s2_offre", q: "Quelles sont les forces et les manques de l'offre de soins autour de vous ?" },
+      { k: "s2_partenaires", q: "Avec quels partenaires travaillez-vous déjà ou aimeriez-vous travailler ?", help: "Hôpital, CPTS, services sociaux, associations, autres MSP…" },
+      { k: "s2_axe1", q: "Première thématique que vous aimeriez retenir", type: "text" },
+      { k: "s2_axe2", q: "Deuxième thématique", type: "text" },
+      { k: "s2_axe3", q: "Troisième thématique (facultatif)", type: "text" }
+    ],
+    apporter: ["Le diagnostic territorial annoté", "Les questionnaires patients et les idées de la boîte à idées"]
+  },
+  s3: {
+    intro: "Pour chacune de vos thématiques prioritaires, notez ce qui se fait déjà et vos premières idées d'actions. Même incomplet, ce travail nous fera gagner beaucoup de temps en séance.",
+    fiches: [
+      ["axe", "Thématique", "text"],
+      ["existant", "Ce que vous faites déjà sur ce sujet", "area"],
+      ["nouveau", "Vos idées d'actions nouvelles", "area"],
+      ["public", "Quels patients sont concernés ? Combien, à peu près ?", "area"],
+      ["pros", "Quels professionnels de la MSP seraient impliqués ?", "area"],
+      ["partenaires", "Quels partenaires extérieurs ?", "area"],
+      ["usagers", "Comment associer les patients ?", "area"],
+      ["referents", "Qui pourrait porter cette action ?", "text"]
+    ],
+    questions: [
+      { k: "s3_carto", q: "Autres partenaires à mobiliser (toutes thématiques confondues)" }
+    ],
+    apporter: ["Les actions déjà menées sur vos thématiques (affiches, comptes rendus…)", "Une estimation du nombre de patients concernés par chaque thématique (requête dans votre logiciel)"]
+  },
+  s4: {
+    intro: "Cette séance porte sur l'organisation de votre maison de santé. Rassemblez ces informations pratiques à l'avance : c'est la partie du projet la plus facile à préparer seul.",
+    pros: true,
+    questions: [
+      { k: "s4_adresses", q: "Adresse(s) de la maison de santé et professionnels qui viennent en vacation" },
+      { k: "s4_si", q: "Quel logiciel utilisez-vous ? Est-il partagé entre les professionnels ?" },
+      { k: "s4_partage", q: "Comment échangez-vous les informations sur les patients ?", help: "Messagerie sécurisée, DMP, réunions, cahier de liaison…" },
+      { k: "s4_rcp", q: "Vous réunissez-vous déjà pour parler de patients ? À quel rythme ?" },
+      { k: "s4_protocoles", q: "Avez-vous des protocoles communs, écrits ou non ?", help: "Par exemple : suivi du diabète, plaies, chutes…" },
+      { k: "s4_coordination", q: "Qui assure aujourd'hui les tâches de coordination ? Combien de temps cela représente-t-il ?" },
+      { k: "s4_horaires", q: "Horaires d'ouverture, prise de rendez-vous, visites à domicile" },
+      { k: "s4_snp", q: "Comment répondez-vous aux demandes de soins urgents (le jour même) ? Comment s'organise la continuité des soins (congés, gardes) ?" },
+      { k: "s4_accessibilite", q: "Accessibilité de la MSP : accès handicapés, transports, dépassements d'honoraires…" },
+      { k: "s4_dpc", q: "Accueillez-vous des étudiants ? Faites-vous des formations en commun ?" },
+      { k: "s4_sisa", q: "Où en êtes-vous de la structure juridique (association, SISA) ?" },
+      { k: "s4_aci", q: "Connaissez-vous les financements ACI que vous visez ?", help: "Si vous ne savez pas, laissez vide : nous en parlerons en séance." },
+      { k: "s4_qualite", q: "Avez-vous une démarche qualité ou des actions pour associer les patients à la vie de la MSP ?" },
+      { k: "s4_santepub", q: "Menez-vous des actions de prévention ou de santé publique (dépistages, ateliers, campagnes) ?" }
+    ],
+    apporter: ["Numéros RPPS / ADELI de chaque professionnel", "Statuts actuels de l'association ou de la SISA, s'ils existent", "Nom et version de votre logiciel", "Protocoles déjà écrits, même partiels"]
+  },
+  s5: {
+    intro: "Le projet de santé est presque terminé. Relisez-le en équipe avant la dernière séance et notez vos remarques : la séance servira à valider, signer et préparer la présentation à l'ARS.",
+    questions: [
+      { k: "s5_validation", q: "Après relecture, quelles corrections ou précisions souhaitez-vous apporter ?", help: "Indiquez la partie concernée (ex. : « Fiche-action 2 : ajouter la diététicienne »)." },
+      { k: "s5_suivi", q: "Comment comptez-vous suivre la mise en œuvre du projet ?", help: "Qui suit les indicateurs ? Quand ferez-vous un premier point d'étape ?" },
+      { k: "s5_date_ars", q: "Date souhaitée de transmission à l'ARS", type: "date" },
+      { k: "s5_paroles", q: "Qui présentera le projet aux institutions (ARS, CPAM) ?", help: "Idéalement au moins deux médecins et un autre professionnel." },
+      { k: "s5_questions", q: "Quelles questions l'ARS pourrait-elle vous poser ? Comment y répondriez-vous ?" }
+    ],
+    apporter: ["Le projet de santé relu et annoté", "La liste des professionnels qui signeront", "Les éventuels documents à joindre en annexe (protocoles, questionnaire usagers)"]
+  }
+};

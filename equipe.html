@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Préparer la séance · Projet de santé · Territoire Tremplin</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="logo-tremplin.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bleu:#2150b5;--rose:#e61a7c;--vert:#3a9174;--jaune:#f6b313;--violet:#4a479c;--ciel:#1f84cf;--bg:#f4f6fb;--line:#dde2ee;--ink:#23273a;--muted:#646a82;--ok:#3a9174;--err:#c62828;
+--c1:#2150b5;--c2:#3a9174;--c3:#e8641b;--c4:#1d8a8a;--c5:#d99a00}
+*{box-sizing:border-box}
+body{margin:0;font-family:Poppins,system-ui,sans-serif;font-size:15px;line-height:1.55;color:var(--ink);background:var(--bg)}
+.wrap{max-width:860px;margin:0 auto;padding:0 18px}
+header{background:#fff;border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;gap:12px;min-height:64px}
+header img{width:46px;height:46px}
+header b{display:block;font-size:15px}
+header small{color:var(--rose);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+main{padding:22px 0 60px}
+.hero{background:var(--c,var(--bleu));color:#fff;border-radius:20px;padding:22px 24px;margin-bottom:16px}
+.hero .k{font-size:12px;font-weight:700;opacity:.85;text-transform:uppercase;letter-spacing:.06em}
+.hero h1{margin:.15em 0 .3em;font-size:clamp(22px,4vw,30px);line-height:1.2}
+.hero p{margin:0;opacity:.95}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:16px}
+.card h2{font-size:17px;margin:0 0 10px;color:var(--bleu)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.box{border-radius:14px;padding:14px 16px}
+.box.bleu{background:#e9f0fc;border:1px solid #c9d8f5}.box.jaune{background:#fff7e0;border:1px solid #f6dc95}
+.box h3{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.box ul{margin:0;padding-left:18px}
+.f{margin-bottom:16px}
+.f label{display:block;font-weight:600;margin-bottom:3px}
+.f .help{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}
+input[type=text],input[type=email],input[type=date],textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;background:#fff}
+textarea{min-height:90px;resize:vertical}
+input:focus,textarea:focus{outline:2px solid var(--ciel);outline-offset:1px;border-color:transparent}
+.f.filled input,.f.filled textarea{border-left:4px solid var(--ok)}
+.fiche{border:2px solid var(--c3);border-radius:14px;padding:14px;margin-bottom:14px}
+.fiche h3{margin:0 0 10px;color:var(--c3);font-size:15px;display:flex;justify-content:space-between;align-items:center}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:6px;text-align:left}
+th{font-size:12px;text-transform:uppercase;color:var(--muted)}
+td input{padding:7px 9px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:12px;padding:11px 18px;font:inherit;font-weight:600;cursor:pointer;background:var(--bleu);color:#fff;text-decoration:none}
+.btn.rose{background:var(--rose)}.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}.btn.sm{padding:6px 11px;font-size:13px;border-radius:9px}
+.btn:disabled{opacity:.6;cursor:wait}
+.bar{height:10px;border-radius:10px;background:#e3e7f1;overflow:hidden;margin:6px 0 2px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--vert),var(--ciel))}
+.sticky{position:sticky;bottom:0;background:rgba(244,246,251,.96);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:12px 0;margin-top:10px}
+.sticky .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#msg{font-weight:600;font-size:14px}
+.save{font-size:12px;color:var(--muted)}
+.list a{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;text-decoration:none;color:var(--ink)}
+.list .n{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:18px;flex:none}
+.muted{color:var(--muted)}
+footer{font-size:12.5px;color:var(--muted);text-align:center;padding:20px}
+@media (max-width:640px){.cols{grid-template-columns:1fr}}
+@media print{header,.sticky,.noprint{display:none!important}body{background:#fff}.card,.hero{break-inside:avoid}.hero{color:#000;background:#fff!important;border:2px solid #000}textarea,input{border:1px solid #999!important;min-height:70px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><img src="logo-tremplin.png" alt="Territoire Tremplin"><div><b>Projet de santé — fiche de préparation</b><small>FEMAS Hauts-de-France · Territoire Tremplin</small></div></div></header>
+<main><div class="wrap" id="app"></div></main>
+<footer>Vos réponses sont enregistrées automatiquement sur cet ordinateur et transmises à la FEMAS Hauts-de-France uniquement quand vous cliquez sur « Envoyer ». Ne mentionnez aucune information permettant d'identifier un patient.</footer>
+<script src="config.js"></script>
+<script src="equipe.js"></script>
+</body>
+</html>
