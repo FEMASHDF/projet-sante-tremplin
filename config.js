@@ -126,7 +126,7 @@ const SEANCES = [
     trame: "1. Préambule · 1.2 Gouvernance",
     materiel: ["Diagnostic FEMAS mis en forme (présentation + remise)", "Salle en îlots ou en U, paperboard, post-its 2 couleurs, gommettes", "Vidéoprojecteur + support d'animation séance 1", "Upmeet ouvert (captation)", "Imprimés : trombinoscope, calendrier, questionnaire voix des usagers", "Accueil café : la 1ʳᵉ séance crée le lien"],
     deroule: [[0, 10, "Accueil & tour de table", "Chacun dit en un mot ce qu'il attend de la démarche."], [10, 22, "Le « pourquoi »", "Post-its motivations / attentes, regroupement par thème."], [22, 38, "Le cadre MSP / ACI", "Rappel du modèle, de l'ACI et des attendus du projet de santé. Quiz vrai/faux."], [38, 58, "Gouvernance", "Qui pilote, qui coordonne, référents par futur axe. Organigramme."], [58, 76, "Diagnostic territorial FEMAS", "Présentation-synthèse, premières réactions à chaud."], [76, 88, "Feuille de route & usagers", "Validation du calendrier, remise du diagnostic, lancement du recueil usagers."], [88, 90, "Engagements & clôture", "Chacun nomme une action d'ici la prochaine séance."]],
-    recup: ["L'histoire et la dynamique de l'équipe (le « pourquoi »)", "2 à 3 objectifs de la création du projet de santé et de la MSP", "Le nom du pilote, du coordinateur et la répartition des rôles", "Les ambitions d'évolution (locaux, nouveaux professionnels, projets)", "Le calendrier validé des 4 séances suivantes", "Le diagnostic FEMAS remis et le mode de recueil de la voix des usagers choisi"],
+    recup: ["L'histoire et la dynamique de l'équipe (le « pourquoi »)", "2 à 3 objectifs de la création du projet de santé et de la MSP", "Le nom du pilote, du coordinateur et la répartition des rôles", "Les ambitions d'évolution (locaux, nouveaux professionnels, projets)", "La composition complète de l'équipe (dont tous les infirmiers avec qui les médecins travaillent) et la démarche de création de l'association loi 1901", "Le calendrier validé des 4 séances suivantes (délai ARS : 6 mois minimum entre la 1ʳᵉ réunion et le passage en comité)", "Le diagnostic FEMAS remis et le mode de recueil de la voix des usagers choisi"],
     fields: [
       { k: "s1_histoire", label: "Histoire et genèse du regroupement", sec: "1.1", help: "Le « pourquoi » de créer la MSP ensemble, en quelques phrases." },
       { k: "s1_motivations", label: "Attentes et motivations de chacun", sec: "1.1", help: "Synthèse des post-its, regroupés par thème." },
@@ -135,6 +135,7 @@ const SEANCES = [
       { k: "s1_pilote", label: "Pilote du projet", sec: "1.2", type: "text" },
       { k: "s1_coordinateur", label: "Coordinateur / coordinatrice", sec: "1.2", type: "text" },
       { k: "s1_roles", label: "Organigramme projet et répartition des rôles", sec: "1.2", help: "Facilitateur, référents par futur axe, missions de coordination." },
+      { k: "s1_juridique", label: "Structure juridique : association loi 1901 et perspective SISA", sec: "4.3", help: "L'ARS exige une association loi 1901 préalable (c'est elle qui obtient le n° FINESS). Membres de l'association, futurs associés SISA, calendrier." },
       { k: "s1_usagers_mode", label: "Mode de recueil de la voix des usagers retenu", sec: "2.3", help: "Questionnaire papier / QR, boîte à idées, verbatims, durée du recueil." }
     ],
     vigilance: ["Équipe qui se constitue : soigner l'interconnaissance.", "Tenir le minutage : le diagnostic est présenté, pas co-produit.", "Annoncer que le diagnostic sera confronté au terrain en séance 2.", "Acter noir sur blanc pilote et coordinateur ; verrouiller les dates.", "Lancer concrètement le recueil usagers : sans support distribué ce soir-là, il ne démarrera pas."],
@@ -310,15 +311,18 @@ const EQUIPE = {
       { k: "s1_ambitions", q: "Avez-vous des projets d'évolution ?", help: "Locaux, arrivée de nouveaux professionnels, nouveaux services…" },
       { k: "s1_pilote", q: "Qui pilote le projet ?", type: "text" },
       { k: "s1_coordinateur", q: "Qui assure (ou assurera) la coordination ?", type: "text" },
-      { k: "s1_roles", q: "Comment envisagez-vous la répartition des rôles dans le projet ?", help: "Qui s'occupe de quoi : organisation, lien avec les partenaires, suivi des thématiques…" }
+      { k: "s1_roles", q: "Comment envisagez-vous la répartition des rôles dans le projet ?", help: "Qui s'occupe de quoi : organisation, lien avec les partenaires, suivi des thématiques…" },
+      { k: "s1_juridique", q: "Où en êtes-vous de la création de l'association loi 1901 ?", help: "L'ARS demande de créer d'abord une association loi 1901 : c'est elle qui obtient le numéro FINESS indispensable à la reconnaissance de la maison de santé. La SISA viendra ensuite. Indiquez si l'association est créée ou en projet, qui en fera partie, et qui envisage d'entrer dans la future SISA. La FEMAS vous transmet un modèle de statuts." }
     ],
-    apporter: ["Vos agendas, pour caler les dates des 4 séances suivantes", "La liste des professionnels intéressés par le projet"]
+    pros: true,
+    prosHelp: "Listez tous les professionnels qui participent au projet, y compris les infirmiers et les autres professionnels du secteur avec qui vous travaillez habituellement. Dans « Rôle dans le projet », précisez par exemple : membre de l'association, futur associé SISA, signataire du projet de santé.",
+    apporter: ["Vos agendas, pour fixer les dates des 5 rencontres. L'ARS impose au moins 6 mois entre la première réunion et le passage en comité : prévoyez plus de temps entre les séances 2 et 3 pour travailler vos thématiques.", "Le modèle de statuts d'association transmis par la FEMAS, si vous l'avez déjà parcouru"]
   },
   s2: {
     intro: "Vous avez reçu le diagnostic de votre territoire. Lisez-le, échangez entre vous et notez vos réactions : elles serviront de point de départ à la séance.",
     questions: [
       { k: "s2_territoire", q: "Quel chiffre du diagnostic vous a le plus surpris ? Pourquoi ?" },
-      { k: "s2_constats", q: "Qu'est-ce qui correspond à ce que vous vivez au quotidien ? Qu'est-ce qui vous semble décalé ?" },
+      { k: "s2_constats", q: "Qu'est-ce qui correspond à ce que vous vivez au quotidien ? Qu'est-ce qui vous semble décalé ?", help: "Regardez en particulier les 5 premières pathologies (ALD) du diagnostic : les retrouvez-vous dans votre patientèle ? Manque-t-il un problème de santé que vous rencontrez souvent ?" },
       { k: "s2_besoins", q: "Quels sont, selon vous, les besoins de santé prioritaires de vos patients ?" },
       { k: "s2_usagers", q: "Que disent vos patients ?", help: "Résultats du questionnaire, idées de la boîte à idées, remarques entendues au cabinet (sans nom ni information permettant d'identifier un patient)." },
       { k: "s2_offre", q: "Quelles sont les forces et les manques de l'offre de soins autour de vous ?" },
@@ -360,7 +364,7 @@ const EQUIPE = {
       { k: "s4_snp", q: "Comment répondez-vous aux demandes de soins urgents (le jour même) ? Comment s'organise la continuité des soins (congés, gardes) ?" },
       { k: "s4_accessibilite", q: "Accessibilité de la MSP : accès handicapés, transports, dépassements d'honoraires…" },
       { k: "s4_dpc", q: "Accueillez-vous des étudiants ? Faites-vous des formations en commun ?" },
-      { k: "s4_sisa", q: "Où en êtes-vous de la structure juridique (association, SISA) ?" },
+      { k: "s4_sisa", q: "Projet de SISA : qui seront les associés fondateurs ? Quels principes de fonctionnement envisagez-vous ?", help: "L'association loi 1901 doit être créée avant la SISA. Tous les membres de l'association ne sont pas obligés d'entrer dans la SISA." },
       { k: "s4_aci", q: "Connaissez-vous les financements ACI que vous visez ?", help: "Si vous ne savez pas, laissez vide : nous en parlerons en séance." },
       { k: "s4_qualite", q: "Avez-vous une démarche qualité ou des actions pour associer les patients à la vie de la MSP ?" },
       { k: "s4_santepub", q: "Menez-vous des actions de prévention ou de santé publique (dépistages, ateliers, campagnes) ?" }

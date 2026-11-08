@@ -60,7 +60,7 @@
       <div class="f"><label>Commune</label><input type="text" data-d="commune" value="${esc(data.commune)}"></div>
       <div class="f"><label>Rempli par (nom, fonction)</label><input type="text" data-d="expediteur" value="${esc(data.expediteur)}"></div>
       <div class="f"><label>E-mail</label><input type="email" data-d="email" value="${esc(data.email)}"></div></div></div>
-    ${E.pros ? `<div class="card"><h2>Les professionnels de la MSP</h2><p class="muted" style="margin-top:0;font-size:13.5px">Une ligne par professionnel. Le numéro RPPS / ADELI est indispensable pour le dossier ARS.</p><div id="pros">${prosHTML()}</div><button class="btn sm ghost noprint" data-add-pro style="margin-top:10px">+ Ajouter un professionnel</button></div>` : ""}
+    ${E.pros ? `<div class="card"><h2>Les professionnels de la MSP</h2><p class="muted" style="margin-top:0;font-size:13.5px">${esc(E.prosHelp || "Une ligne par professionnel. Le numéro RPPS / ADELI est indispensable pour le dossier ARS.")}</p><div id="pros">${prosHTML()}</div><button class="btn sm ghost noprint" data-add-pro style="margin-top:10px">+ Ajouter un professionnel</button></div>` : ""}
     ${E.fiches ? `<div class="card"><h2>Vos thématiques prioritaires</h2><div id="fiches">${fichesHTML()}</div><button class="btn sm ghost noprint" data-add-fiche>+ Ajouter une thématique</button></div>` : ""}
     <div class="card"><h2>${E.fiches ? "Pour compléter" : "Vos réponses"}</h2>${E.questions.map(field).join("")}</div>
     <div class="sticky noprint"><div class="wrap">

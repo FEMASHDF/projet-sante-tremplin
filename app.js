@@ -515,7 +515,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
       <h1>4. Projet professionnel</h1>
       <h2>4.1 Référents et offre de services</h2>${pros}${T("s4_adresses")}
       <h2>4.2 Coordination et management de la structure</h2>${T("s4_coordination")}${filled(st.f.s4_temps_coord) ? `<p><b>Temps de coordination :</b> ${esc(st.f.s4_temps_coord)}</p>` : ""}
-      <h2>4.3 Structure juridique (SISA) et financements ACI</h2>${T("s4_sisa")}<h3>Financements ACI</h3>${T("s4_aci")}<h3>Calendrier de constitution</h3>${T("s4_sisa_ec")}
+      <h2>4.3 Structure juridique et financements ACI</h2><h3>Association loi 1901</h3>${T("s1_juridique")}<h3>SISA</h3>${T("s4_sisa")}<h3>Financements ACI</h3>${T("s4_aci")}<h3>Calendrier de constitution</h3>${T("s4_sisa_ec")}
       <h2>4.4 Organisation de la pluriprofessionnalité</h2><h3>Réunions de concertation pluriprofessionnelle</h3>${T("s4_rcp")}<h3>Protocoles pluriprofessionnels</h3>${T("s4_protocoles")}<h3>Système d'information partagé</h3>${T("s4_si")}<h3>Partage des données et information du patient</h3>${T("s4_partage")}
       <h2>4.5 Développement professionnel continu et démarche qualité</h2>${T("s4_dpc")}${T("s4_qualite")}
       <h1>5. Projet d'organisation de la prise en charge</h1>
@@ -555,7 +555,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
       ["Coordination et fonction de coordination décrites", () => allF("s4_coordination"), "s4"],
       ["Réunions de concertation pluripro et protocoles", () => allF("s4_rcp", "s4_protocoles"), "s4"],
       ["Système d'information partagé labellisé ANS", () => allF("s4_si"), "s4"],
-      ["Structure juridique (SISA) constituée ou en cours, financements ACI", () => allF("s4_sisa", "s4_aci"), "s4"],
+      ["Structure juridique (association loi 1901 préalable, SISA) et financements ACI", () => allF("s1_juridique", "s4_sisa", "s4_aci"), "s4"],
       ["Développement professionnel continu et accueil d'étudiants", () => allF("s4_dpc"), "s4"]]],
     ["5. Organisation de la prise en charge", [
       ["Horaires, prise de RDV, visites à domicile", () => allF("s4_horaires"), "s4"],

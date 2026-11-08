@@ -137,7 +137,7 @@
     C.push(spacer(), ...text("s4_adresses", "adresse(s), référents, vacations"));
     C.push(h2("4.2 Coordination et management de la structure"), ...text("s4_coordination"));
     if (has(f.s4_temps_coord)) C.push(para([run("Temps de coordination estimé : ", { bold: true }), run(f.s4_temps_coord)]));
-    C.push(h2("4.3 Structure juridique (SISA) et financements ACI"), h3("SISA"), ...text("s4_sisa"), h3("Financements ACI"), ...text("s4_aci"), h3("Calendrier de constitution"), ...text("s4_sisa_ec"));
+    C.push(h2("4.3 Structure juridique et financements ACI"), h3("Association loi 1901"), ...text("s1_juridique"), h3("SISA"), ...text("s4_sisa"), h3("Financements ACI"), ...text("s4_aci"), h3("Calendrier de constitution"), ...text("s4_sisa_ec"));
     C.push(h2("4.4 Organisation de la pluriprofessionnalité"), h3("Réunions de concertation pluriprofessionnelle"), ...text("s4_rcp"), h3("Protocoles pluriprofessionnels"), ...text("s4_protocoles"), h3("Système d'information partagé"), ...text("s4_si"), h3("Partage des données et information du patient"), ...text("s4_partage"));
     C.push(h2("4.5 Développement professionnel continu et démarche qualité"), h3("Formation et accueil d'étudiants"), ...text("s4_dpc"), h3("Démarche qualité et implication des usagers"), ...text("s4_qualite"));
 
