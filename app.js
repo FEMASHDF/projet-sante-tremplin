@@ -478,7 +478,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
         <a class="btn ghost" href="mailto:${esc(st.m.email || "")}?subject=${encodeURIComponent("Note d'inter-session — atelier " + s.num + " — MSP " + (st.m.msp || ""))}">✉ Préparer l'e-mail</a>
         <a class="btn ghost" href="#${s.id}/releve">← Compléter le relevé</a>
       </div>
-      <div class="note-preview" id="notebox">${noteHTML(s)}</div>${sendCard(s.id)}`;
+      <div class="note-preview" id="notebox">${noteHTML(s)}</div>`;
   }
 
   /* --- Projet de santé compilé --- */
@@ -537,7 +537,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     const sc = confScore();
     return `<div class="stephead" style="--c:var(--bleu)"><div class="num">📄</div><div><h2>Projet de santé — ${esc(st.m.msp || "MSP")}</h2><p>Compilé automatiquement à partir de toutes les séances, dans la structure de la trame FEMAS. Les zones orange restent à compléter.</p></div><div class="prog"><b>${sc.pct} %</b><div class="bar"><i style="width:${sc.pct}%"></i></div><small>conformité ARS</small></div></div>
     <div class="row noprint" style="margin-bottom:12px"><button class="btn" data-export-projet>⬇ Télécharger en Word</button><button class="btn ghost" onclick="window.print()">🖨 Imprimer / PDF</button><a class="btn ghost" href="#conformite">Vérifier la conformité →</a></div>
-    ${sendCard("complet")}<div class="card note-preview" style="max-height:none;margin-top:16px">${projetHTML(false)}</div>`;
+    <div class="card note-preview" style="max-height:none;margin-top:16px">${projetHTML(false)}</div>`;
   }
 
   /* --- Conformité ARS --- */
@@ -598,24 +598,25 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
 
   /* --- Outils --- */
   function viewOutils() {
-    const bySeance = SEANCES.filter((s) => s.id !== "s0").map((s) => `<div class="card"><h4 style="color:${s.couleur}">Séance ${s.num} — ${esc(s.titre)}</h4><ul class="plain">${Object.values(OUTILS).filter((t) => t.s === s.id).map((t) => `<li><b>${esc(t.nom)}</b> <span class="muted">(${esc(t.duree)} · ${t.reco.split("").join("/")})</span> — ${esc(t.desc)}</li>`).join("")}</ul></div>`).join("");
+    const bySeance = SEANCES.filter((s) => s.id !== "s0").map((s) => `<div class="card"><h4 style="color:${s.couleur}">Atelier ${s.num} — ${esc(s.titre)}</h4><ul class="plain">${Object.values(OUTILS).filter((t) => t.s === s.id).map((t) => `<li><b>${esc(t.nom)}</b> <span class="muted">(${esc(t.duree)} · ${t.reco.split("").join("/")})</span> — ${esc(t.desc)}</li>`).join("")}</ul></div>`).join("");
     return `<div class="stephead" style="--c:var(--ink)"><div class="num">🧰</div><div><h2>Outils, sauvegarde & partage</h2><p>Exportez un dossier pour le transmettre à une collègue (continuité, doublon de salariée) ou le sauvegarder.</p></div></div>
     <div class="grid g3">
       <div class="card"><h4>Sauvegarder / partager</h4>
         <p class="muted" style="font-size:13.5px">Les données sont enregistrées automatiquement dans ce navigateur. La version de référence est le fichier .json déposé dans le dossier SharePoint de la MSP.</p>
         <ol class="muted" style="font-size:13px;padding-left:18px;margin:6px 0 10px"><li>Dans SharePoint, <b>Extraire</b> le fichier .json puis l'importer ici.</li><li>Travailler, puis exporter « Cette MSP » : le nom du fichier ne change pas.</li><li>Le redéposer au même endroit (« Remplacer ») puis <b>Archiver</b>.</li></ol>
-        ${spBtn(null, "sm ghost")}<p class="muted" style="font-size:12.5px">Dernière modification : ${esc(fmtStamp(st.updated))}${st.exported ? " · dernier export : " + esc(fmtStamp(st.exported)) : ""}</p>
+        <button class="btn rose" data-save-sp style="margin-bottom:8px">📁 Enregistrer dans SharePoint</button>
+        <p class="muted" style="font-size:12.5px;margin-top:0">Exporte le fichier .json de cette MSP et ouvre son dossier SharePoint : déposez-le dans « 00 - Données outil » en remplaçant l'ancien.</p>
+        <p class="muted" style="font-size:12.5px">Dernière modification : ${esc(fmtStamp(st.updated))}${st.exported ? " · dernier export : " + esc(fmtStamp(st.exported)) : ""}</p>
         <div class="row"><button class="btn" data-export-json="one">⬇ Cette MSP (.json)</button><button class="btn ghost" data-export-json="all">⬇ Toutes les MSP</button></div>
         <h4 style="margin-top:14px">Importer</h4><input type="file" id="importFile" accept=".json,application/json"><p class="muted" style="font-size:13px">Un dossier importé s'ajoute à la liste ou remplace celui qui porte le même identifiant. Si la version de ce navigateur est plus récente, une confirmation est demandée.</p>
       </div>
-      <div class="card"><h4>Les 14 outils du kit FEMAS</h4>${KIT.map(([g, l]) => `<p style="margin:.4em 0"><b>${esc(g)}</b><br><span class="muted" style="font-size:13.5px">${l.map(esc).join(" · ")}</span></p>`).join("")}</div>
+      <div class="card"><h4>Les ${KIT.reduce((n, [, l]) => n + l.length, 0)} outils du kit FEMAS</h4>${KIT.map(([g, l]) => `<p style="margin:.4em 0"><b>${esc(g)}</b><br><span class="muted" style="font-size:13.5px">${l.map(esc).join(" · ")}</span></p>`).join("")}</div>
       <div class="card"><h4>Gérer le dossier</h4>
         <p><b>${esc(st.m.msp || "MSP sans nom")}</b></p>
         <div class="row"><button class="btn ghost" data-dup>Dupliquer</button><button class="btn ghost" data-del-dossier style="color:var(--err)">Supprimer ce dossier</button></div>
-        <h4 style="margin-top:14px">Confidentialité</h4><p class="muted" style="font-size:13.5px">Les données sont enregistrées dans ce navigateur. Elles ne sont transmises à la FEMAS que lorsque vous cliquez sur « Envoyer à la FEMAS » (hébergement UE). Ne saisissez aucune donnée identifiant un patient (verbatims anonymisés).</p>
+        <h4 style="margin-top:14px">Confidentialité</h4><p class="muted" style="font-size:13.5px">Les données sont enregistrées dans ce navigateur et sauvegardées dans le dossier SharePoint de la MSP (accès réservé à l'équipe FEMAS). Ne saisissez aucune donnée identifiant un patient (verbatims anonymisés).</p>
       </div>
     </div>
-    ${sendCard("complet")}
     <h3 style="margin-top:22px">Catalogue des outils d'animation</h3><div class="grid g2">${bySeance}</div>`;
   }
 
@@ -965,12 +966,21 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     save(); updateProgress(); renderNav();
   });
   app.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-tab],[data-tool],[data-add-fiche],[data-del-fiche],[data-add-pro],[data-del-pro],[data-add-act],[data-del-act],[data-timer],[data-timer-reset],[data-copy-prompt],[data-import-claude],[data-export-note],[data-copy-note],[data-export-releve],[data-export-projet],[data-export-conf],[data-export-json],[data-del-dossier],[data-dup],[data-open],[data-send],[data-emarg-del],[data-emarg-resend],[data-copy-eq],[data-qr-emarg]");
+    const b = e.target.closest("[data-tab],[data-tool],[data-add-fiche],[data-del-fiche],[data-add-pro],[data-del-pro],[data-add-act],[data-del-act],[data-timer],[data-timer-reset],[data-copy-prompt],[data-import-claude],[data-export-note],[data-copy-note],[data-export-releve],[data-export-projet],[data-export-conf],[data-export-json],[data-del-dossier],[data-dup],[data-open],[data-send],[data-emarg-del],[data-emarg-resend],[data-copy-eq],[data-qr-emarg],[data-save-sp]");
     if (!b) return;
     const d = b.dataset;
     if (d.tab) { location.hash = d.tab; return; }
     if (d.open) { switchTo(d.open); return; }
     if (d.send != null) { sendFemas(); return; }
+    if (d.saveSp != null) {
+      const u = spUrl();
+      if (!u) { toast("Renseignez d'abord le lien du dossier SharePoint dans l'onglet Dossier"); location.hash = "dossier"; return; }
+      const w = window.open(u, "_blank"); if (w) w.opener = null;
+      st.exported = new Date().toISOString(); save(true, true);
+      downloadJSON("projet-sante-" + fileSlug(), { version: 1, dossiers: { [st.id]: st } });
+      toast(w === null ? "Fichier exporté — autorisez les fenêtres pour ouvrir SharePoint" : "Fichier exporté : déposez-le dans « 00 - Données outil » (Remplacer)");
+      return rerender(true);
+    }
     if (d.qrEmarg) { showQrEmarg(d.qrEmarg); return; }
     if (d.copyEq) { navigator.clipboard.writeText(d.copyEq).then(() => toast("Lien copié : collez-le dans votre message à l'équipe"), () => toast("Copie impossible")); return; }
     if (d.emargResend) { b.disabled = true; emargGet(d.emargResend).then((rec) => rec && emargSend(rec)).then((ok) => { toast(ok ? "Feuille transmise à la FEMAS" : "Envoi impossible, vérifiez la connexion"); refreshEmarg(d.emargSid); }); return; }
