@@ -267,6 +267,7 @@
       <div class="now" id="clocknow"><small>Séquence en cours</small>${tl && timer.running ? "" : "Chrono à l'arrêt"}</div>
       <button class="btn sm ${tl && timer.running ? "ghost" : "vert"}" data-timer="${s.id}">${tl && timer.running ? "⏸ Pause" : "▶ Démarrer"}</button>
       <button class="btn sm ghost" data-timer-reset="${s.id}">↺</button>
+      <a class="btn sm ghost" href="${esc(UPMEET_URL)}" target="_blank" rel="noopener" title="Lancer l'enregistrement dans Upmeet">🎙 Ouvrir Upmeet</a>
     </div>
     <div class="tblwrap card" style="padding:8px;margin-bottom:16px"><table class="t" id="deroule"><thead><tr><th>Temps</th><th>Séquence</th><th>Méthode</th></tr></thead><tbody>
       ${s.deroule.map(([a, b, seq, met], i) => `<tr data-row="${i}" data-a="${a}" data-b="${b}"><td><b>${a}–${b}</b></td><td><b>${esc(seq)}</b></td><td>${esc(met)}</td></tr>`).join("")}
@@ -983,6 +984,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     if (d.delAct) { const [sid, i] = d.delAct.split("."); relev(sid).actions.splice(+i, 1); save(); return rerender(true); }
     if (d.timer) {
       if (timer.sid !== d.timer) { timer.sid = d.timer; timer.acc = 0; timer.running = false; }
+      if (!timer.running && timer.acc === 0 && !confirm("Avez-vous lancé l'enregistrement Upmeet et informé l'équipe que la séance est enregistrée ?\n\nOK : démarrer le chronomètre.\nAnnuler : ouvrir Upmeet d'abord.")) { window.open(UPMEET_URL, "_blank", "noopener"); return; }
       if (timer.running) { timer.acc += Date.now() - timer.start; timer.running = false; } else { timer.start = Date.now(); timer.running = true; }
       clearInterval(timer.iv); if (timer.running) timer.iv = setInterval(tick, 1000);
       b.textContent = timer.running ? "⏸ Pause" : "▶ Reprendre"; b.classList.toggle("vert", !timer.running); b.classList.toggle("ghost", timer.running); tick(); return;

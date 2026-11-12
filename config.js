@@ -326,6 +326,8 @@ const KIT = [
 /* Réception des envois : formulaires Jotform (serveurs UE), notification e-mail aux référentes FEMAS */
 const JOTFORM = { id: "262886164559372", submit: "https://eu-submit.jotform.com/submit/262886164559372/" };
 const JOTFORM_EMARG = { id: "263013829432353", submit: "https://eu-submit.jotform.com/submit/263013829432353/" };
+/* Captation des séances : espace Upmeet de la FEMAS (enregistrement lancé depuis Upmeet, pas depuis l'outil) */
+const UPMEET_URL = "https://app.upmeet.ai/meetings";
 /* Émargement individuel par QR code : chaque professionnel saisit nom, prénom, profession et signe sur son téléphone */
 const JOTFORM_PRESENCE = { id: "263154049776364", url: "https://eu.jotform.com/263154049776364" };
 const JOTFORM_EQUIPE = { id: "263096396809371", submit: "https://eu-submit.jotform.com/submit/263096396809371/" };
