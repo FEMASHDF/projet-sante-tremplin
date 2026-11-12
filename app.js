@@ -110,12 +110,12 @@
       <div class="prog"><b id="prog-${s.id}">${p} %</b><div class="bar"><i id="progbar-${s.id}" style="width:${p}%"></i></div><small>${st.m.dates && st.m.dates[s.id] ? "📅 " + fmtDate(st.m.dates[s.id]) : ""}</small></div></div>`;
   }
   function fmtDate(d) { if (!d) return ""; try { return new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }); } catch (e) { return d; } }
-  function profilPill(p) { return p ? `<span class="pill ${p}">Profil ${p} · ${esc(PROFILS[p].court)}</span>` : `<span class="pill">Profil non défini</span>`; }
+  function profilPill(p) { return p ? `<span class="pill ${p}">Parcours ${esc(PROFILS[p].court)}</span>` : `<span class="pill">Parcours non défini</span>`; }
 
   /* ---------------- VUES ---------------- */
   function viewAccueil() {
     const p = profil();
-    const steps = SEANCES.map((s) => `<a class="pstep" href="#${s.id}" style="--c:${s.couleur}"><b>${s.id === "s0" ? "Prépa" : "Séance " + s.num}</b><span>${esc(s.titre)}</span><small style="opacity:.85">${st.m.dates && st.m.dates[s.id] ? new Date(st.m.dates[s.id] + "T12:00").toLocaleDateString("fr-FR") : ""}</small><div class="bar"><i style="width:${progress(s.id)}%"></i></div></a>`).join("");
+    const steps = SEANCES.map((s) => `<a class="pstep" href="#${s.id}" style="--c:${s.couleur}"><b>${s.id === "s0" ? "Prépa" : "Atelier " + s.num}</b><span>${esc(s.titre)}</span><small style="opacity:.85">${st.m.dates && st.m.dates[s.id] ? new Date(st.m.dates[s.id] + "T12:00").toLocaleDateString("fr-FR") : ""}</small><div class="bar"><i style="width:${progress(s.id)}%"></i></div></a>`).join("");
     return `
     <div class="hero">
       <div>
@@ -143,7 +143,7 @@
         <div class="eyebrow">Le principe</div>
         <h3>1 atelier = 1 partie du projet écrite</h3>
         <ul class="plain">
-          <li><b>Avant</b> : fiche animateur, briefing du binôme, outils d'animation choisis selon le profil d'équipe.</li>
+          <li><b>Avant</b> : fiche animateur, briefing du binôme, outils d'animation choisis selon le parcours de l'équipe.</li>
           <li><b>Pendant</b> : chrono du déroulé, check-list « à récupérer », saisie directe dans la trame.</li>
           <li><b>Après</b> : transcription Upmeet → Claude → réponse importée en 1 clic ; relevé de décisions et note d'inter-séance générés automatiquement.</li>
           <li><b>À la fin</b> : projet de santé exporté en Word et grille de conformité ARS calculée.</li>
@@ -154,7 +154,7 @@
     <div class="why">
       <div><b>Zéro ressaisie.</b>Ce qui est capté en séance alimente directement la trame, la note d'inter-séance et la grille ARS.</div>
       <div><b>Le temps humain préservé.</b>On anime en séance, on rédige entre les séances avec Claude.</div>
-      <div><b>Adapté à chaque équipe.</b>3 profils d'accompagnement, des outils d'animation recommandés pour chacun.</div>
+      <div><b>Adapté à chaque équipe.</b>3 parcours (standard, accéléré, équipe autonome), un même cap : un projet conforme et fidèle à l'équipe.</div>
       <div><b>Rien ne se perd.</b>Continuité entre salariées : tout le dossier est exportable et réimportable.</div>
     </div>`;
   }
@@ -172,7 +172,7 @@
     const qs = QUESTIONS.map((q) => `<div class="q"><b>${esc(q.label)}</b><div class="opts">${q.opts.map((o, i) => `<label><input type="radio" name="${q.id}" data-q="${q.id}" value="${i}" ${String(m.q[q.id]) === String(i) ? "checked" : ""}><span>${esc(o)}</span></label>`).join("")}</div></div>`).join("");
     const pr = eff ? PROFILS[eff] : null;
     return `
-    <div class="stephead" style="--c:var(--violet)"><div class="num">✎</div><div><h2>Dossier de la MSP</h2><p>Identité, binôme d'animation, calendrier et profil d'accompagnement.</p></div></div>
+    <div class="stephead" style="--c:var(--violet)"><div class="num">✎</div><div><h2>Dossier de la MSP</h2><p>Identité, binôme d'animation, calendrier et parcours d'accompagnement.</p></div></div>
     <div class="grid g2">
       <div class="card">
         <h3>Votre maison de santé</h3>
@@ -188,17 +188,17 @@
         <div class="f"><label>Lien du dossier SharePoint de la MSP</label><input type="url" data-m="sp" value="${esc(m.sp || "")}" placeholder="https://….sharepoint.com/…"><small class="muted">${m.sp && !spUrl() ? "⚠ Lien non reconnu : copiez l'adresse du dossier depuis SharePoint (https://….sharepoint.com/…)." : "Copiez l'adresse du dossier TREMPLIN de cette MSP. Le fichier .json exporté se dépose dans son sous-dossier « Données outil »."}</small></div>
         ${spBtn()}
         <h3 style="margin-top:8px">Calendrier des séances</h3>
-        <div class="cols2">${SEANCES.map((s) => `<div class="f"><label>${esc(s.id === "s0" ? "Lancement / prépa" : "Séance " + s.num + " — " + s.titre)}</label><input type="date" data-date="${s.id}" value="${esc(m.dates[s.id] || "")}"></div>`).join("")}</div>
+        <div class="cols2">${SEANCES.map((s) => `<div class="f"><label>${esc(s.id === "s0" ? "Lancement / prépa" : "Atelier " + s.num + " — " + s.titre)}</label><input type="date" data-date="${s.id}" value="${esc(m.dates[s.id] || "")}"></div>`).join("")}</div>
       </div>
       <div class="card">
         <h3>Quel accompagnement pour cette équipe ?</h3>
-        <p class="muted">5 questions · 2 minutes. Le profil adapte les conseils d'animation, les outils recommandés et la note d'inter-séance.</p>
+        <p class="muted">5 questions · 2 minutes. Le parcours proposé adapte les conseils d'animation, les outils recommandés et la note d'inter-séance.</p>
         ${qs}
         <div class="profil-res ${eff || "none"}">
-          ${pr ? `<div style="font-size:12px;opacity:.85;font-weight:600;text-transform:uppercase">Profil ${eff}${m.profil ? " (choisi manuellement)" : " (calculé)"}</div><h3 style="margin:.2em 0">${esc(pr.nom)}</h3><b>${esc(pr.format)}</b><ul class="plain">${pr.principes.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : `<b>Répondez aux 5 questions pour obtenir le profil.</b>`}
+          ${pr ? `<div style="font-size:12px;opacity:.85;font-weight:600;text-transform:uppercase">Parcours${m.profil ? " choisi manuellement" : " proposé"}</div><h3 style="margin:.2em 0">${esc(pr.nom)}</h3><b>${esc(pr.format)}</b><ul class="plain">${pr.principes.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : `<b>Répondez aux 5 questions pour obtenir le profil.</b>`}
         </div>
-        <div class="f" style="margin-top:12px"><label>Forcer un profil (facultatif)</label>
-          <select data-m="profil"><option value="">— Profil calculé${p ? " : " + p : ""} —</option>${Object.entries(PROFILS).map(([k, v]) => `<option value="${k}" ${m.profil === k ? "selected" : ""}>${k} · ${esc(v.nom)}</option>`).join("")}</select></div>
+        <div class="f" style="margin-top:12px"><label>Choisir un autre parcours (facultatif)</label>
+          <select data-m="profil"><option value="">— Parcours proposé${p ? " : " + PROFILS[p].court : ""} —</option>${Object.entries(PROFILS).map(([k, v]) => `<option value="${k}" ${m.profil === k ? "selected" : ""}>${esc(v.nom)} — ${esc(v.format)}</option>`).join("")}</select></div>
       </div>
     </div>
     <div class="card" style="margin-top:16px">
@@ -217,7 +217,7 @@
       st = keep;
       return `<tr><td><a href="#dossier" data-open="${d.id}"><b>${esc(d.m.msp || "MSP sans nom")}</b></a><br><small class="muted">${esc(d.m.commune || "")}</small>${spUrl(d) ? ` · <a href="${esc(spUrl(d))}" target="_blank" rel="noopener" title="Dossier SharePoint">📁</a>` : ""}</td><td>${pr ? `<span class="pill ${pr}">${pr}</span>` : "—"}</td><td>${esc(d.m.statut || "")}</td>${cells}<td>${conf}%</td><td>${next ? new Date(d.m.dates[next.id] + "T12:00").toLocaleDateString("fr-FR") + " (S" + next.num + ")" : "—"}</td></tr>`;
     }).join("");
-    return `<div class="tblwrap"><table class="t dash"><thead><tr><th>MSP</th><th>Profil</th><th>Statut</th>${SEANCES.map((s) => `<th>${s.id === "s0" ? "Prépa" : "S" + s.num}</th>`).join("")}<th>ARS</th><th>Prochain RDV</th></tr></thead><tbody>${rows}</tbody></table></div>
+    return `<div class="tblwrap"><table class="t dash"><thead><tr><th>MSP</th><th>Parcours</th><th>Statut</th>${SEANCES.map((s) => `<th>${s.id === "s0" ? "Prépa" : "S" + s.num}</th>`).join("")}<th>ARS</th><th>Prochain RDV</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="muted" style="font-size:13px">Les dossiers sont stockés dans ce navigateur. Pour les partager entre salariées : <a href="#outils">exporter / importer</a>.</p>`;
   }
 
@@ -242,7 +242,7 @@
     <div class="grid g2">
       <div>
         <div class="box bleu"><h4>Objectif de la séance</h4>${esc(s.objectif)}<br><br><b>Livrable :</b> ${esc(s.livrable)}</div>
-        ${p ? `<div class="box rose"><h4>Conseil profil ${p} · ${esc(PROFILS[p].court)}</h4>${esc(s.profilTips[p])}</div>` : `<div class="box rose"><h4>Profil d'équipe</h4>Non défini — <a href="#dossier">répondre aux 5 questions</a> pour des conseils adaptés.</div>`}
+        ${p ? `<div class="box rose"><h4>Conseil parcours ${esc(PROFILS[p].court)}</h4>${esc(s.profilTips[p])}</div>` : `<div class="box rose"><h4>Parcours</h4>Non défini — <a href="#dossier">répondre aux 5 questions</a> pour des conseils adaptés.</div>`}
         <div class="card"><h4>Préparation & matériel</h4>${checklist(s.id, s.materiel, "m")}</div>
       </div>
       <div>
@@ -250,8 +250,8 @@
         <div class="box jaune"><h4>Points de vigilance</h4><ul class="plain">${s.vigilance.map((v) => `<li>${esc(v)}</li>`).join("")}</ul></div>
       </div>
     </div>
-    ${tools.length ? `<h3 style="margin-top:20px">Boîte à outils d'animation <span class="muted" style="font-size:14px;font-weight:400">— cliquez pour composer votre séance (★ = recommandé pour le profil ${p || "?"})</span></h3>
-    <div class="tools">${tools.map(([id, t]) => `<div class="tool ${chosen.includes(id) ? "sel" : ""}" data-tool="${s.id}:${id}">${p && t.reco.includes(p) ? `<span class="reco">★ ${p}</span>` : ""}<h5>${esc(t.nom)}</h5><div class="meta">⏱ ${esc(t.duree)} · profils ${t.reco.split("").join(" / ")}</div><p>${esc(t.desc)}</p>${chosen.includes(id) ? `<span class="tick">✓ retenu</span>` : ""}</div>`).join("")}</div>` : ""}`;
+    ${tools.length ? `<h3 style="margin-top:20px">Boîte à outils d'animation <span class="muted" style="font-size:14px;font-weight:400">— cliquez pour composer votre séance (★ = recommandé pour le parcours ${p ? esc(PROFILS[p].court) : "?"})</span></h3>
+    <div class="tools">${tools.map(([id, t]) => `<div class="tool ${chosen.includes(id) ? "sel" : ""}" data-tool="${s.id}:${id}">${p && t.reco.includes(p) ? `<span class="reco">★ ${esc(PROFILS[p].court)}</span>` : ""}<h5>${esc(t.nom)}</h5><div class="meta">⏱ ${esc(t.duree)} · profils ${t.reco.split("").join(" / ")}</div><p>${esc(t.desc)}</p>${chosen.includes(id) ? `<span class="tick">✓ retenu</span>` : ""}</div>`).join("")}</div>` : ""}`;
   }
 
   function paneSaisie(s) {
@@ -298,14 +298,13 @@
   }
   function prosHTML() {
     return `<div class="card" style="margin-bottom:16px"><div class="row" style="justify-content:space-between"><h4 style="margin:0">Professionnels de la MSP</h4><button class="btn sm" data-add-pro>+ Ajouter</button></div>
-      <div class="tblwrap"><table class="t"><thead><tr><th>Nom et prénom</th><th>Profession</th><th>RPPS / ADELI</th><th>Rôle / référent</th><th></th></tr></thead><tbody>
-      ${st.pros.map((p, i) => `<tr>${["nom", "profession", "rpps", "role"].map((k) => `<td><input type="text" data-pro="${i}.${k}" value="${esc(p[k] || "")}"></td>`).join("")}<td><button class="btn sm ghost" data-del-pro="${i}">✕</button></td></tr>`).join("") || `<tr><td colspan="5" class="muted">Aucun professionnel saisi.</td></tr>`}
-      </tbody></table></div></div>`;
+      <p class="muted" style="font-size:13px;margin:6px 0 10px">Nom, prénom, fonction, RPPS / ADELI, adresse d'exercice, jours et horaires, spécialités / MSU, secteur et tarif de consultation.</p>
+      ${st.pros.map((p, i) => proFormHTML(p, i, esc, "data-del-pro")).join("") || `<p class="muted">Aucun professionnel saisi.</p>`}</div>`;
   }
   function signaturesHTML() {
     return `<div class="card" style="margin-bottom:16px"><h4>Signatures des professionnels engagés</h4>
       <div class="tblwrap"><table class="t"><thead><tr><th>Nom et prénom</th><th>Profession</th><th>Signé</th></tr></thead><tbody>
-      ${st.pros.map((p, i) => `<tr><td>${esc(p.nom)}</td><td>${esc(p.profession)}</td><td><input type="checkbox" data-pro-sign="${i}" ${p.signe ? "checked" : ""}></td></tr>`).join("") || `<tr><td colspan="3" class="muted">Renseignez les professionnels en <a href="#s4/seance">séance 4</a>.</td></tr>`}
+      ${st.pros.map((p, i) => `<tr><td>${esc(proNom(p))}</td><td>${esc(p.profession)}</td><td><input type="checkbox" data-pro-sign="${i}" ${p.signe ? "checked" : ""}></td></tr>`).join("") || `<tr><td colspan="3" class="muted">Renseignez les professionnels en <a href="#s4/seance">séance 4</a>.</td></tr>`}
       </tbody></table></div>
       <h4 style="margin-top:14px">Plan d'action consolidé (généré depuis les fiches-actions)</h4>${planTable()}</div>`;
   }
@@ -352,7 +351,7 @@
     s.fields.forEach((f) => { if (filled(st.f[f.k])) current[f.k] = st.f[f.k]; });
     const schema = { ...Object.fromEntries(Object.entries(keys).map(([k, v]) => [k, "texte — " + v])) };
     if (s.fiches) schema.fiches = [Object.fromEntries(FICHE_CHAMPS.map(([k, l]) => [k, l]))];
-    if (s.pros) schema.pros = [{ nom: "Nom et prénom", profession: "Profession", rpps: "RPPS/ADELI si cité, sinon vide", role: "Rôle / référent" }];
+    if (s.pros) schema.pros = [Object.fromEntries(PRO_CHAMPS.map(([k, l]) => [k, l + " (vide si non cité)"]))];
     if (s.id !== "s0") schema.releve = { decisions: "une décision par ligne", actions: [{ prio: "1, 2 ou 3", quoi: "action", qui: "responsable", quand: "échéance" }], suspens: "points en suspens" };
     const ctx = [];
     if (st.f.s1_objectifs) ctx.push("Objectifs de la MSP : " + st.f.s1_objectifs);
@@ -365,7 +364,7 @@ CONTEXTE
 - Étape : ${s.long}
 - Objectif de l'étape : ${s.objectif}
 - Sections de la trame concernées : ${s.trame}
-- Profil d'accompagnement de l'équipe : ${p ? p + " — " + PROFILS[p].nom : "non défini"}
+- Parcours d'accompagnement de l'équipe : ${p ? PROFILS[p].nom + " (" + PROFILS[p].format + ")" : "non défini"}
 ${ctx.length ? ctx.map((c) => "- " + c).join("\n") + "\n" : ""}- Informations à récupérer : ${s.recup.join(" ; ")}.
 
 TA MISSION
@@ -425,9 +424,9 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     if (s.pros && Array.isArray(data.pros)) {
       data.pros.forEach((p) => {
         if (!filled(p.nom)) return;
-        const ex = st.pros.find((x) => (x.nom || "").toLowerCase().trim() === p.nom.toLowerCase().trim());
-        if (ex) { ["profession", "rpps", "role"].forEach((k) => { if (filled(p[k]) && (over || !filled(ex[k]))) ex[k] = p[k]; }); }
-        else st.pros.push({ nom: p.nom, profession: p.profession || "", rpps: p.rpps || "", role: p.role || "" });
+        const ex = st.pros.find((x) => proNom(x).toLowerCase().trim() === proNom(p).toLowerCase().trim());
+        if (ex) { PRO_CHAMPS.forEach(([k]) => { if (filled(p[k]) && (over || !filled(ex[k]))) ex[k] = p[k]; }); }
+        else st.pros.push(Object.fromEntries(PRO_CHAMPS.map(([k]) => [k, p[k] || ""])));
         n++;
       });
     }
@@ -489,8 +488,8 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     const logo = new URL("logo-tremplin.png", location.href).href;
     const fiches = st.fiches.map((fi, i) => `<h3>Fiche-action n° ${i + 1}${fi.axe ? " — " + esc(fi.axe) : ""}</h3>
       <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%">${FICHE_CHAMPS.map(([k, l]) => `<tr><td style="width:32%;background:#eef1f8"><b>${esc(l)}</b></td><td>${nl2br(fi[k] || "")}</td></tr>`).join("")}</table>`).join("");
-    const pros = st.pros.length ? `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%"><tr style="background:#eef1f8"><th>Nom et prénom</th><th>Profession</th><th>RPPS / ADELI</th><th>Rôle / référent</th></tr>${st.pros.map((p) => `<tr><td>${esc(p.nom)}</td><td>${esc(p.profession)}</td><td>${esc(p.rpps)}</td><td>${esc(p.role)}</td></tr>`).join("")}</table>` : `<p style="color:#b45309"><i>Liste des professionnels à compléter</i></p>`;
-    const sign = `<table border="1" cellspacing="0" cellpadding="10" style="border-collapse:collapse;width:100%"><tr style="background:#eef1f8"><th>Nom et prénom</th><th>Profession</th><th style="width:35%">Signature</th></tr>${(st.pros.length ? st.pros : [{}, {}, {}, {}]).map((p) => `<tr><td>${esc(p.nom || "")}</td><td>${esc(p.profession || "")}</td><td>&nbsp;<br>&nbsp;</td></tr>`).join("")}</table>`;
+    const pros = st.pros.length ? `<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%"><tr style="background:#eef1f8"><th>Nom et prénom</th><th>Fonction</th><th>RPPS / ADELI</th><th>Adresse, jours et horaires</th><th>Spécialités / MSU</th><th>Secteur / tarif</th></tr>${st.pros.map((p) => `<tr><td>${esc(proNom(p))}</td><td>${esc(p.profession)}</td><td>${esc(p.rpps)}</td><td>${esc([p.adresse, p.horaires].filter(Boolean).join(" — "))}</td><td>${esc(p.specialites)}</td><td>${esc([p.secteur, p.tarif ? p.tarif + " €" : ""].filter(Boolean).join(" · "))}</td></tr>`).join("")}</table>` : `<p style="color:#b45309"><i>Liste des professionnels à compléter</i></p>`;
+    const sign = `<table border="1" cellspacing="0" cellpadding="10" style="border-collapse:collapse;width:100%"><tr style="background:#eef1f8"><th>Nom et prénom</th><th>Profession</th><th style="width:35%">Signature</th></tr>${(st.pros.length ? st.pros : [{}, {}, {}, {}]).map((p) => `<tr><td>${esc(proNom(p))}</td><td>${esc(p.profession || "")}</td><td>&nbsp;<br>&nbsp;</td></tr>`).join("")}</table>`;
     const axes = ["s2_axe1", "s2_axe2", "s2_axe3"].filter((k) => filled(st.f[k])).map((k) => `<li>${esc(st.f[k])}</li>`).join("");
     return `
       <div style="text-align:center">
@@ -560,6 +559,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
       ["Un porteur et un calendrier pour chaque action", () => fichesOk((f) => filled(f.referents) && filled(f.calendrier)), "s3"]]],
     ["4. Projet professionnel", [
       ["Liste des professionnels avec RPPS / ADELI et référents", () => st.pros.length > 0 && st.pros.every((p) => filled(p.rpps)), "s4"],
+      ["Adresse d'exercice, jours et horaires, secteur de chaque professionnel", () => st.pros.length > 0 && st.pros.every((p) => filled(p.adresse) && filled(p.horaires) && filled(p.secteur)), "s4"],
       ["Coordination et fonction de coordination décrites", () => allF("s4_coordination"), "s4"],
       ["Réunions de concertation pluripro et protocoles", () => allF("s4_rcp", "s4_protocoles"), "s4"],
       ["Système d'information partagé labellisé ANS", () => allF("s4_si"), "s4"],
@@ -623,7 +623,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
   /* ---------------- ENVOI À LA FEMAS (Jotform) ---------------- */
   function sendCard(defaultEtape) {
     const last = (st.m.envois || []).slice(-1)[0];
-    const opts = [["complet", "Dossier complet"]].concat(SEANCES.map((s) => [s.id, s.id === "s0" ? "Préparation" : "Séance " + s.num + " — " + s.titre]));
+    const opts = [["complet", "Dossier complet"]].concat(SEANCES.map((s) => [s.id, s.id === "s0" ? "Préparation" : "Atelier " + s.num + " — " + s.titre]));
     return `<div class="card sendcard noprint" style="border:2px solid var(--rose);margin-top:16px">
       <div class="eyebrow">Envoyer à la FEMAS Hauts-de-France</div>
       <h3 style="margin:.2em 0 .6em">Transmettre le dossier en un clic</h3>
@@ -820,9 +820,9 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
       });
       (d.pros || []).forEach((p) => {
         if (!filled(p.nom)) return;
-        const ex = st.pros.find((x) => (x.nom || "").trim().toLowerCase() === p.nom.trim().toLowerCase());
-        if (ex) ["profession", "rpps", "role"].forEach((k) => { if (filled(p[k]) && !filled(ex[k])) { ex[k] = p[k]; n++; } });
-        else { st.pros.push({ nom: p.nom, profession: p.profession || "", rpps: p.rpps || "", role: p.role || "" }); n++; }
+        const ex = st.pros.find((x) => proNom(x).trim().toLowerCase() === proNom(p).trim().toLowerCase());
+        if (ex) PRO_CHAMPS.forEach(([k]) => { if (filled(p[k]) && !filled(ex[k])) { ex[k] = p[k]; n++; } });
+        else { st.pros.push(Object.fromEntries(PRO_CHAMPS.map(([k]) => [k, p[k] || ""]))); n++; }
       });
       if (!filled(st.m.msp) && filled(d.msp)) st.m.msp = d.msp;
       if (!filled(st.m.commune) && filled(d.commune)) st.m.commune = d.commune;
@@ -935,7 +935,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     if (d.tool) { const [sid, id] = d.tool.split(":"); const a = st.o[sid] = st.o[sid] || []; const i = a.indexOf(id); i >= 0 ? a.splice(i, 1) : a.push(id); save(); return rerender(true); }
     if (d.addFiche != null) { st.fiches.push({}); save(); return rerender(true); }
     if (d.delFiche != null) { if (confirm("Supprimer cette fiche-action ?")) { st.fiches.splice(+d.delFiche, 1); save(); rerender(true); } return; }
-    if (d.addPro != null) { st.pros.push({ nom: "", profession: "", rpps: "", role: "" }); save(); return rerender(true); }
+    if (d.addPro != null) { st.pros.push(Object.fromEntries(PRO_CHAMPS.map(([k]) => [k, ""]))); save(); return rerender(true); }
     if (d.delPro != null) { st.pros.splice(+d.delPro, 1); save(); return rerender(true); }
     if (d.addAct) { relev(d.addAct).actions.push({ prio: 1, quoi: "", qui: "", quand: "" }); save(); return rerender(true); }
     if (d.delAct) { const [sid, i] = d.delAct.split("."); relev(sid).actions.splice(+i, 1); save(); return rerender(true); }

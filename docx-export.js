@@ -132,8 +132,8 @@
     /* ---- 4. Projet professionnel ---- */
     C.push(h1("4. Projet professionnel"));
     C.push(h2("4.1 Référents et offre de services"));
-    const pros = (st.pros || []).filter((p) => has(p.nom));
-    C.push(pros.length ? table([2900, 2300, 2000, 2438], ["Nom et prénom", "Profession", "RPPS / ADELI", "Rôle / référent"], pros.map((p) => [p.nom || "", p.profession || "", p.rpps || "", p.role || ""])) : todo("liste des professionnels"));
+    const pros = (st.pros || []).filter((p) => has(p.nom) || has(p.prenom));
+    C.push(pros.length ? table([1800, 1400, 1400, 2238, 1500, 1300], ["Nom et prénom", "Fonction", "RPPS / ADELI", "Adresse, jours et horaires", "Spécialités / MSU", "Secteur / tarif"], pros.map((p) => [proNom(p), p.profession || "", p.rpps || "", [p.adresse, p.horaires].filter(Boolean).join(" — "), p.specialites || "", [p.secteur, p.tarif ? p.tarif + " €" : ""].filter(Boolean).join(" · ")])) : todo("liste des professionnels"));
     C.push(spacer(), ...text("s4_adresses", "adresse(s), référents, vacations"));
     C.push(h2("4.2 Coordination et management de la structure"), ...text("s4_coordination"));
     if (has(f.s4_temps_coord)) C.push(para([run("Temps de coordination estimé : ", { bold: true }), run(f.s4_temps_coord)]));
@@ -153,7 +153,7 @@
     C.push(new Table({
       width: { size: W, type: WidthType.DXA }, columnWidths: [3600, 2800, 3238],
       rows: [new TableRow({ tableHeader: true, children: ["Nom et prénom", "Profession", "Signature"].map((h, i) => cell(h, [3600, 2800, 3238][i], { fill: BLEU, bold: true, color: "FFFFFF" })) })]
-        .concat(sig.map((p) => new TableRow({ height: { value: 700, rule: "atLeast" }, cantSplit: true, children: [cell(p.nom || "", 3600), cell(p.profession || "", 2800), cell("", 3238)] })))
+        .concat(sig.map((p) => new TableRow({ height: { value: 700, rule: "atLeast" }, cantSplit: true, children: [cell(proNom(p), 3600), cell(p.profession || "", 2800), cell("", 3238)] })))
     }));
 
     /* ---- 7. Annexes ---- */

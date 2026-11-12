@@ -43,8 +43,7 @@
   };
   const fichesHTML = () => data.fiches.map((fi, i) => `<div class="fiche"><h3>Thématique ${i + 1}${fi.axe ? " — " + esc(fi.axe) : ""}<button class="btn sm ghost noprint" data-del-fiche="${i}">Retirer</button></h3>
     ${E.fiches.map(([k, l, ty]) => `<div class="f ${filled(fi[k]) ? "filled" : ""}"><label>${esc(l)}</label>${ty === "text" ? `<input type="text" data-fiche="${i}.${k}" value="${esc(fi[k] || "")}">` : `<textarea data-fiche="${i}.${k}" style="min-height:70px">${esc(fi[k] || "")}</textarea>`}</div>`).join("")}</div>`).join("");
-  const prosHTML = () => `<table><thead><tr><th>Nom et prénom</th><th>Profession</th><th>RPPS / ADELI</th><th>Rôle dans le projet</th><th></th></tr></thead><tbody>
-    ${data.pros.map((p, i) => `<tr>${["nom", "profession", "rpps", "role"].map((k) => `<td><input type="text" data-pro="${i}.${k}" value="${esc(p[k] || "")}"></td>`).join("")}<td><button class="btn sm ghost noprint" data-del-pro="${i}">✕</button></td></tr>`).join("")}</tbody></table>`;
+  const prosHTML = () => data.pros.map((p, i) => proFormHTML(p, i, esc, "data-del-pro")).join("");
 
   function render() {
     const date = P.get("date");
@@ -99,7 +98,7 @@
 
   function lisible() {
     const L = [];
-    if (E.pros) { const ps = data.pros.filter((p) => filled(p.nom)); if (ps.length) L.push("PROFESSIONNELS\n" + ps.map((p) => "- " + [p.nom, p.profession, p.rpps, p.role].filter(Boolean).join(" · ")).join("\n")); }
+    if (E.pros) { const ps = data.pros.filter((p) => filled(p.nom) || filled(p.prenom)); if (ps.length) L.push("PROFESSIONNELS\n" + ps.map((p) => "- " + PRO_CHAMPS.map(([k, l]) => k === "nom" ? proNom(p) : k === "prenom" ? "" : (p[k] ? l + " : " + p[k] : "")).filter(Boolean).join(" · ")).join("\n")); }
     if (E.fiches) data.fiches.forEach((fi, i) => { const lines = E.fiches.filter(([k]) => filled(fi[k])).map(([k, l]) => l + " : " + fi[k]); if (lines.length) L.push("THÉMATIQUE " + (i + 1) + "\n" + lines.join("\n")); });
     E.questions.forEach((q) => { if (filled(data.f[q.k])) L.push(q.q.toUpperCase() + "\n" + data.f[q.k]); });
     return L.join("\n\n") || "(aucune réponse)";
