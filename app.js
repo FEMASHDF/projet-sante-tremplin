@@ -322,7 +322,6 @@
         <div class="f"><label>Présents</label><textarea rows="2" data-r="${s.id}.presents">${esc(r.presents || "")}</textarea></div>
         <div class="f"><label>Excusés</label><textarea rows="2" data-r="${s.id}.excuses">${esc(r.excuses || "")}</textarea></div>
       </div>
-      ${emargHTML(s.id)}
       <div class="f"><label>Décisions prises</label><span class="help">Une décision par ligne.</span><textarea rows="5" data-r="${s.id}.decisions">${esc(r.decisions || "")}</textarea></div>
       <div class="row" style="justify-content:space-between"><h4 style="margin:0">Actions à mener</h4><button class="btn sm" data-add-act="${s.id}">+ Action</button></div>
       <div class="tblwrap"><table class="t"><thead><tr><th>Priorité</th><th>Quoi</th><th>Qui</th><th>Pour quand</th><th>Fait</th><th></th></tr></thead><tbody>
@@ -733,10 +732,52 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
   function emargHTML(sid) {
     if (sid === "s0") return "";
     const n = (st.em || {})[sid] || 0;
-    return `<div class="box rose emarg"><h4>Émargement de la séance</h4>
-      <p style="font-size:13px;margin:0 0 8px">Photographiez ou scannez la feuille d'émargement papier, puis ajoutez-la ici (image ou PDF). Elle est transmise automatiquement à la FEMAS.</p>
+    return `<div class="box rose emarg"><h4>Émargement de l'atelier</h4>
+      <p style="font-size:13px;margin:0 0 8px"><b>Par QR code :</b> projetez ou imprimez le QR code ; chaque professionnel le scanne avec son téléphone, renseigne nom, prénom, profession et signe. Les émargements arrivent directement à la FEMAS.</p>
+      <button class="btn sm" data-qr-emarg="${sid}" style="margin-bottom:10px">📱 Afficher le QR code d'émargement</button>
+      <p style="font-size:13px;margin:0 0 8px"><b>Sur papier :</b> photographiez ou scannez la feuille, puis ajoutez-la ici (image ou PDF). Elle est transmise automatiquement à la FEMAS.</p>
       <label class="btn sm rose" style="cursor:pointer">📷 Ajouter une photo / un PDF<input type="file" accept="image/*,application/pdf" multiple data-emarg-upload="${sid}" style="display:none"></label>
       <div class="emarg-list" data-emarg-list="${sid}" style="margin-top:10px">${n ? "Chargement…" : `<span class="muted" style="font-size:13px">Aucune feuille d'émargement pour l'instant.</span>`}</div></div>`;
+  }
+  /* ---------------- ÉMARGEMENT PAR QR CODE ---------------- */
+  function presenceUrl(sid) {
+    const s = SEANCES.find((x) => x.id === sid) || {};
+    const d = (st.m.dates || {})[sid];
+    const date = d ? new Date(d + "T12:00:00").toLocaleDateString("fr-FR") : new Date().toLocaleDateString("fr-FR");
+    const q = new URLSearchParams({ msp: st.m.msp || "MSP", seance: "Atelier " + s.num + " — " + (s.titre || ""), date, dossierId: st.id });
+    return JOTFORM_PRESENCE.url + "?" + q.toString();
+  }
+  function qrSvg(text, cell) {
+    if (typeof qrcode !== "function") return "";
+    const qr = qrcode(0, "M"); qr.addData(text, "Byte"); qr.make();
+    return qr.createSvgTag({ cellSize: cell || 8, margin: 2, scalable: true });
+  }
+  function showQrEmarg(sid) {
+    const s = SEANCES.find((x) => x.id === sid) || {};
+    const url = presenceUrl(sid), svg = qrSvg(url);
+    if (!svg) return toast("Générateur de QR code indisponible : rechargez la page");
+    const titre = `Atelier ${s.num} — ${s.titre || ""}`;
+    const ov = document.createElement("div");
+    ov.id = "qrOverlay";
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(15,20,40,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";
+    ov.innerHTML = `<div style="background:#fff;border-radius:16px;padding:22px;max-width:520px;width:100%;text-align:center;max-height:100%;overflow:auto">
+      <div style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#888">Émargement</div>
+      <h2 style="margin:4px 0 2px">${esc(st.m.msp || "MSP")}</h2><p style="margin:0 0 12px;color:#555">${esc(titre)}</p>
+      <div style="width:min(78vw,340px);margin:0 auto">${svg}</div>
+      <p style="font-size:14px;margin:12px 0 4px"><b>Scannez avec l'appareil photo de votre téléphone</b><br>puis renseignez nom, prénom, profession et signez.</p>
+      <p style="font-size:11.5px;color:#888;word-break:break-all;margin:6px 0 14px">${esc(url)}</p>
+      <div class="row" style="justify-content:center;gap:8px;flex-wrap:wrap"><button class="btn sm" data-qr-print>🖨 Imprimer</button><button class="btn sm ghost" data-qr-copy>📋 Copier le lien</button><button class="btn sm ghost" data-qr-close>Fermer</button></div></div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener("click", (e) => {
+      if (e.target === ov || e.target.closest("[data-qr-close]")) return ov.remove();
+      if (e.target.closest("[data-qr-copy]")) return navigator.clipboard.writeText(url).then(() => toast("Lien d'émargement copié"), () => toast("Copie impossible"));
+      if (e.target.closest("[data-qr-print]")) {
+        const w = window.open("", "_blank");
+        if (!w) return toast("Autorisez les fenêtres pour imprimer");
+        w.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Émargement ${esc(st.m.msp || "")} · ${esc(titre)}</title><style>body{font-family:Arial,sans-serif;text-align:center;padding:40px}h1{font-size:28px;margin:0 0 6px}h2{font-weight:normal;color:#444;margin:0 0 28px}.qr{width:12cm;margin:0 auto}p{font-size:18px}small{color:#888;word-break:break-all}</style></head><body><h1>${esc(st.m.msp || "")}</h1><h2>${esc(titre)}${(st.m.dates || {})[sid] ? " · " + esc(fmtDate(st.m.dates[sid])) : ""}</h2><div class="qr">${svg}</div><p><b>Émargement : scannez ce QR code avec votre téléphone</b><br>renseignez nom, prénom, profession et signez.</p><small>${esc(url)}</small><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`);
+        w.document.close();
+      }
+    });
   }
   async function refreshEmarg(sid) {
     const nodes = $$(`[data-emarg-list="${sid}"]`); if (!nodes.length) return;
@@ -923,12 +964,13 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     save(); updateProgress(); renderNav();
   });
   app.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-tab],[data-tool],[data-add-fiche],[data-del-fiche],[data-add-pro],[data-del-pro],[data-add-act],[data-del-act],[data-timer],[data-timer-reset],[data-copy-prompt],[data-import-claude],[data-export-note],[data-copy-note],[data-export-releve],[data-export-projet],[data-export-conf],[data-export-json],[data-del-dossier],[data-dup],[data-open],[data-send],[data-emarg-del],[data-emarg-resend],[data-copy-eq]");
+    const b = e.target.closest("[data-tab],[data-tool],[data-add-fiche],[data-del-fiche],[data-add-pro],[data-del-pro],[data-add-act],[data-del-act],[data-timer],[data-timer-reset],[data-copy-prompt],[data-import-claude],[data-export-note],[data-copy-note],[data-export-releve],[data-export-projet],[data-export-conf],[data-export-json],[data-del-dossier],[data-dup],[data-open],[data-send],[data-emarg-del],[data-emarg-resend],[data-copy-eq],[data-qr-emarg]");
     if (!b) return;
     const d = b.dataset;
     if (d.tab) { location.hash = d.tab; return; }
     if (d.open) { switchTo(d.open); return; }
     if (d.send != null) { sendFemas(); return; }
+    if (d.qrEmarg) { showQrEmarg(d.qrEmarg); return; }
     if (d.copyEq) { navigator.clipboard.writeText(d.copyEq).then(() => toast("Lien copié : collez-le dans votre message à l'équipe"), () => toast("Copie impossible")); return; }
     if (d.emargResend) { b.disabled = true; emargGet(d.emargResend).then((rec) => rec && emargSend(rec)).then((ok) => { toast(ok ? "Feuille transmise à la FEMAS" : "Envoi impossible, vérifiez la connexion"); refreshEmarg(d.emargSid); }); return; }
     if (d.emargDel) { if (confirm("Retirer cette feuille de l'outil ? (La copie déjà transmise à la FEMAS est conservée.)")) emargDel(d.emargDel).then(() => refreshEmarg(d.emargSid)); return; }
