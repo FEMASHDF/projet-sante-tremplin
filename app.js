@@ -35,7 +35,8 @@
   let st = store.dossiers[store.current];
 
   let saveT = null;
-  function save(now) {
+  function save(now, nav) {
+    if (!nav && st) st.updated = new Date().toISOString();
     const pill = $("#savepill");
     pill.textContent = "Enregistrement…"; pill.classList.add("wait");
     clearTimeout(saveT);
@@ -45,6 +46,11 @@
       pill.classList.remove("wait");
     }, now ? 0 : 400);
   }
+  /* ---------------- DOSSIER SHAREPOINT ---------------- */
+  function spUrl(d) { const u = ((d || st).m.sp || "").trim(); return /^https:\/\/[a-z0-9-]+\.sharepoint\.com\//i.test(u) ? u : ""; }
+  function spBtn(d, cls) { const u = spUrl(d); return u ? `<a class="btn ${cls || "sm ghost"}" href="${esc(u)}" target="_blank" rel="noopener">📁 Dossier SharePoint</a>` : ""; }
+  function fileSlug(d) { return ((d || st).m.msp || "msp").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "") || "msp"; }
+  function fmtStamp(iso) { return iso ? new Date(iso).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "medium" }) : "date inconnue"; }
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("on"); setTimeout(() => t.classList.remove("on"), 2200); }
 
   /* ---------------- PROFIL ---------------- */
@@ -129,7 +135,7 @@
         <div class="eyebrow">MSP en cours</div>
         <h3>${esc(st.m.msp || "Aucune MSP renseignée")}</h3>
         <p class="muted">${esc(st.m.commune || "")}</p>
-        <p>${profilPill(p)}</p>
+        <p>${profilPill(p)} ${spBtn()}</p>
         ${p ? `<p><b>${esc(PROFILS[p].format)}</b> — ${esc(PROFILS[p].resume)}</p>` : `<p class="muted">Répondez aux 5 questions d'orientation dans le dossier pour adapter le parcours.</p>`}
         <p><b>Prochaine étape :</b> ${nextStep()}</p>
       </div>
@@ -179,6 +185,8 @@
           <div class="f"><label>Salariée FEMAS porteuse</label><input type="text" data-m="porteuse" value="${esc(m.porteuse)}"></div>
           <div class="f"><label>Professionnel·le co-animateur</label><input type="text" data-m="coanim" value="${esc(m.coanim)}"></div>
         </div>
+        <div class="f"><label>Lien du dossier SharePoint de la MSP</label><input type="url" data-m="sp" value="${esc(m.sp || "")}" placeholder="https://….sharepoint.com/…"><small class="muted">${m.sp && !spUrl() ? "⚠ Lien non reconnu : copiez l'adresse du dossier depuis SharePoint (https://….sharepoint.com/…)." : "Copiez l'adresse du dossier TREMPLIN de cette MSP. Le fichier .json exporté se dépose dans son sous-dossier « Données outil »."}</small></div>
+        ${spBtn()}
         <h3 style="margin-top:8px">Calendrier des séances</h3>
         <div class="cols2">${SEANCES.map((s) => `<div class="f"><label>${esc(s.id === "s0" ? "Lancement / prépa" : "Séance " + s.num + " — " + s.titre)}</label><input type="date" data-date="${s.id}" value="${esc(m.dates[s.id] || "")}"></div>`).join("")}</div>
       </div>
@@ -207,7 +215,7 @@
       const next = SEANCES.slice(1).find((s) => d.m.dates[s.id] && d.m.dates[s.id] >= new Date().toISOString().slice(0, 10));
       const conf = confScore().pct;
       st = keep;
-      return `<tr><td><a href="#dossier" data-open="${d.id}"><b>${esc(d.m.msp || "MSP sans nom")}</b></a><br><small class="muted">${esc(d.m.commune || "")}</small></td><td>${pr ? `<span class="pill ${pr}">${pr}</span>` : "—"}</td><td>${esc(d.m.statut || "")}</td>${cells}<td>${conf}%</td><td>${next ? new Date(d.m.dates[next.id] + "T12:00").toLocaleDateString("fr-FR") + " (S" + next.num + ")" : "—"}</td></tr>`;
+      return `<tr><td><a href="#dossier" data-open="${d.id}"><b>${esc(d.m.msp || "MSP sans nom")}</b></a><br><small class="muted">${esc(d.m.commune || "")}</small>${spUrl(d) ? ` · <a href="${esc(spUrl(d))}" target="_blank" rel="noopener" title="Dossier SharePoint">📁</a>` : ""}</td><td>${pr ? `<span class="pill ${pr}">${pr}</span>` : "—"}</td><td>${esc(d.m.statut || "")}</td>${cells}<td>${conf}%</td><td>${next ? new Date(d.m.dates[next.id] + "T12:00").toLocaleDateString("fr-FR") + " (S" + next.num + ")" : "—"}</td></tr>`;
     }).join("");
     return `<div class="tblwrap"><table class="t dash"><thead><tr><th>MSP</th><th>Profil</th><th>Statut</th>${SEANCES.map((s) => `<th>${s.id === "s0" ? "Prépa" : "S" + s.num}</th>`).join("")}<th>ARS</th><th>Prochain RDV</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="muted" style="font-size:13px">Les dossiers sont stockés dans ce navigateur. Pour les partager entre salariées : <a href="#outils">exporter / importer</a>.</p>`;
@@ -594,9 +602,11 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     return `<div class="stephead" style="--c:var(--ink)"><div class="num">🧰</div><div><h2>Outils, sauvegarde & partage</h2><p>Exportez un dossier pour le transmettre à une collègue (continuité, doublon de salariée) ou le sauvegarder.</p></div></div>
     <div class="grid g3">
       <div class="card"><h4>Sauvegarder / partager</h4>
-        <p class="muted" style="font-size:13.5px">Les données sont enregistrées automatiquement dans ce navigateur. Exportez-les pour les conserver ou les partager.</p>
+        <p class="muted" style="font-size:13.5px">Les données sont enregistrées automatiquement dans ce navigateur. La version de référence est le fichier .json déposé dans le dossier SharePoint de la MSP.</p>
+        <ol class="muted" style="font-size:13px;padding-left:18px;margin:6px 0 10px"><li>Dans SharePoint, <b>Extraire</b> le fichier .json puis l'importer ici.</li><li>Travailler, puis exporter « Cette MSP » : le nom du fichier ne change pas.</li><li>Le redéposer au même endroit (« Remplacer ») puis <b>Archiver</b>.</li></ol>
+        ${spBtn(null, "sm ghost")}<p class="muted" style="font-size:12.5px">Dernière modification : ${esc(fmtStamp(st.updated))}${st.exported ? " · dernier export : " + esc(fmtStamp(st.exported)) : ""}</p>
         <div class="row"><button class="btn" data-export-json="one">⬇ Cette MSP (.json)</button><button class="btn ghost" data-export-json="all">⬇ Toutes les MSP</button></div>
-        <h4 style="margin-top:14px">Importer</h4><input type="file" id="importFile" accept=".json,application/json"><p class="muted" style="font-size:13px">Un dossier importé s'ajoute à la liste (ou remplace celui qui porte le même identifiant).</p>
+        <h4 style="margin-top:14px">Importer</h4><input type="file" id="importFile" accept=".json,application/json"><p class="muted" style="font-size:13px">Un dossier importé s'ajoute à la liste ou remplace celui qui porte le même identifiant. Si la version de ce navigateur est plus récente, une confirmation est demandée.</p>
       </div>
       <div class="card"><h4>Les 14 outils du kit FEMAS</h4>${KIT.map(([g, l]) => `<p style="margin:.4em 0"><b>${esc(g)}</b><br><span class="muted" style="font-size:13.5px">${l.map(esc).join(" · ")}</span></p>`).join("")}</div>
       <div class="card"><h4>Gérer le dossier</h4>
@@ -943,7 +953,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     if (d.exportReleve) { downloadDoc("Releve de decisions S" + SEQ[d.exportReleve].num + " - " + (st.m.msp || "MSP"), releveHTML(d.exportReleve)); return; }
     if (d.exportProjet != null) { exportProjetDocx(b); return; }
     if (d.exportConf != null) { downloadDoc("Grille conformite ARS - " + (st.m.msp || "MSP"), confWord()); return; }
-    if (d.exportJson) { const slug = (st.m.msp || "msp").replace(/\s+/g, "-"); if (d.exportJson === "one") downloadJSON("projet-sante-" + slug + "-" + new Date().toISOString().slice(0, 10), { version: 1, dossiers: { [st.id]: st } }); else downloadJSON("projets-sante-toutes-MSP-" + new Date().toISOString().slice(0, 10), { version: 1, dossiers: store.dossiers }); return; }
+    if (d.exportJson) { const slug = (st.m.msp || "msp").replace(/\s+/g, "-"); if (d.exportJson === "one") { st.exported = new Date().toISOString(); save(true, true); downloadJSON("projet-sante-" + fileSlug(), { version: 1, dossiers: { [st.id]: st } }); toast("Déposez ce fichier dans SharePoint sous le même nom (« Remplacer »)"); } else downloadJSON("projets-sante-toutes-MSP-" + new Date().toISOString().slice(0, 10), { version: 1, dossiers: store.dossiers }); return; }
     if (d.dup != null) { const c = JSON.parse(JSON.stringify(st)); c.id = "msp_" + Date.now().toString(36); c.m.msp = (c.m.msp || "MSP") + " (copie)"; store.dossiers[c.id] = c; switchTo(c.id); return; }
     if (d.delDossier != null) {
       if (!confirm("Supprimer définitivement le dossier « " + (st.m.msp || "MSP sans nom") + " » ? Pensez à l'exporter avant.")) return;
@@ -964,13 +974,15 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
         if (data.type === "tremplin-equipe") return importEquipe(file, null);
         const ds = data.dossiers || (data.m ? { [data.id || "msp_" + Date.now().toString(36)]: data } : null);
         if (!ds) throw new Error();
+        const conflicts = Object.values(ds).filter((d) => d.id && store.dossiers[d.id] && (store.dossiers[d.id].updated || "") > (d.updated || ""));
+        if (conflicts.length && !confirm("Attention : la version de ce navigateur est plus récente que le fichier importé pour :\n\n" + conflicts.map((d) => "• " + (d.m.msp || "MSP sans nom") + " — ici : " + fmtStamp(store.dossiers[d.id].updated) + " / fichier : " + fmtStamp(d.updated)).join("\n") + "\n\nImporter quand même et remplacer la version de ce navigateur ?")) return toast("Import annulé");
         let last; Object.values(ds).forEach((d) => { if (!d.id) d.id = "msp_" + Math.random().toString(36).slice(2); ["f", "c", "o", "r", "conf"].forEach((k) => d[k] = d[k] || {}); d.fiches = d.fiches || []; d.pros = d.pros || []; d.m.q = d.m.q || {}; d.m.dates = d.m.dates || {}; store.dossiers[d.id] = d; last = d.id; });
         switchTo(last); toast(Object.keys(ds).length + " dossier(s) importé(s)");
       } catch (e) { toast("Fichier non reconnu"); }
     };
     rd.readAsText(file);
   }
-  function switchTo(id) { store.current = id; st = store.dossiers[id]; save(true); rerender(); }
+  function switchTo(id) { store.current = id; st = store.dossiers[id]; save(true, true); rerender(); }
 
   $("#dossierSel").addEventListener("change", (e) => switchTo(e.target.value));
   $("#newDossier").addEventListener("click", () => {
