@@ -84,6 +84,7 @@
     .concat([["projet", "📄 Projet", ""], ["conformite", "✓ ARS", ""], ["outils", "Outils", ""]]);
 
   function renderNav() {
+    renderFrise();
     const cur = (location.hash || "#accueil").slice(1).split("/")[0];
     $("#navsteps").innerHTML = VIEWS.map(([id, label, num, col]) => {
       const p = num !== "" ? progress(id) : 0;
@@ -91,6 +92,26 @@
     }).join("");
     const sel = $("#dossierSel");
     sel.innerHTML = Object.values(store.dossiers).map((d) => `<option value="${d.id}" ${d.id === store.current ? "selected" : ""}>${esc(d.m.msp || "MSP sans nom")}</option>`).join("");
+  }
+
+  /* ---------------- FRISE CHRONOLOGIQUE ----------------
+     Une couleur fixe par étape ; l'état (fait / en cours / à venir) se lit à la forme :
+     pastille pleine = fait, pastille cerclée = en cours, pastille pâle en pointillés = à venir.
+     Une étape est « faite » à partir de 80 % de complétude (même seuil que « Prochaine étape »). */
+  function stages() {
+    const dates = st.m.dates || {};
+    const arr = SEANCES.map((s) => ({ id: s.id, lbl: s.id === "s0" ? "Préparation" : "Atelier " + s.num, titre: s.id === "s0" ? "Diagnostic" : s.titre, col: s.couleur, num: s.num, p: progress(s.id), date: dates[s.id] }));
+    arr.push({ id: "conformite", lbl: "Après", titre: "Dépôt ARS", col: "var(--c6)", num: "→", p: confScore().pct, date: "" });
+    let found = false;
+    arr.forEach((x) => { if (!found && x.p < 80) { x.state = "cur"; found = true; } else x.state = found ? "todo" : "done"; });
+    return arr;
+  }
+  function renderFrise() {
+    const box = $("#frise"); if (!box) return;
+    const cur = (location.hash || "#accueil").slice(1).split("/")[0];
+    const lab = { done: "✓ Fait", cur: "En cours", todo: "À venir" };
+    box.innerHTML = `<div class="frise"><div class="ft"><b>Progression${st.m.msp ? " · " + esc(st.m.msp) : ""}</b><div class="lg"><span><i></i>Fait</span><span><i class="cur"></i>En cours</span><span><i class="todo"></i>À venir</span></div></div>
+      <div class="fl">${stages().map((x) => `<a class="fz ${x.state} ${cur === x.id ? "on" : ""}" href="#${x.id}" style="--c:${x.col}" title="${esc(x.lbl)} · ${x.p} %"><div class="d">${x.state === "done" ? "✓" : esc(x.num)}</div><b>${esc(x.lbl)}</b><span>${esc(x.titre)}</span><span>${x.date ? new Date(x.date + "T12:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "&nbsp;"}</span><em>${lab[x.state]}${x.state !== "done" ? " · " + x.p + " %" : ""}</em></a>`).join("")}</div></div>`;
   }
 
   /* ---------------- HELPERS RENDU ---------------- */
@@ -115,7 +136,6 @@
   /* ---------------- VUES ---------------- */
   function viewAccueil() {
     const p = profil();
-    const steps = SEANCES.map((s) => `<a class="pstep" href="#${s.id}" style="--c:${s.couleur}"><b>${s.id === "s0" ? "Prépa" : "Atelier " + s.num}</b><span>${esc(s.titre)}</span><small style="opacity:.85">${st.m.dates && st.m.dates[s.id] ? new Date(st.m.dates[s.id] + "T12:00").toLocaleDateString("fr-FR") : ""}</small><div class="bar"><i style="width:${progress(s.id)}%"></i></div></a>`).join("");
     return `
     <div class="hero">
       <div>
@@ -129,7 +149,6 @@
       </div>
       <div class="logo"><img src="logo-tremplin.png" alt="Territoire Tremplin"></div>
     </div>
-    <div class="process">${steps}<a class="pstep light" href="#conformite"><b>Après</b><span>Dépôt ARS</span><div class="bar"><i style="width:${confScore().pct}%"></i></div></a></div>
     <div class="grid g2">
       <div class="card">
         <div class="eyebrow">MSP en cours</div>
@@ -933,6 +952,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
   }
   function rerender(keepScroll) { const y = window.scrollY; render(); if (keepScroll) window.scrollTo(0, y); }
   function updateProgress() {
+    renderFrise();
     SEANCES.forEach((s) => { const p = progress(s.id); const a = $("#prog-" + s.id), b = $("#progbar-" + s.id); if (a) a.textContent = p + " %"; if (b) b.style.width = p + "%"; });
   }
   window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });

@@ -17,7 +17,7 @@
   --violet:#4a479c; --ciel:#1f84cf; --bg:#f4f6fb; --surface:#fff; --surface2:#eef1f8; --line:#dde2ee;
   --ink:#23273a; --muted:#646a82; --ok:#3a9174; --warn:#d97706; --err:#c62828;
   --shadow:0 1px 2px rgba(30,40,80,.06),0 8px 22px rgba(30,40,80,.07);
-  --c0:#4a479c; --c1:#2150b5; --c2:#3a9174; --c3:#e8641b; --c4:#1d8a8a; --c5:#d99a00;
+  --c0:#4a479c; --c1:#2150b5; --c2:#3a9174; --c3:#e8641b; --c4:#1d8a8a; --c5:#d99a00; --c6:#e61a7c;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -37,7 +37,7 @@ nav.top .wrap{display:flex;align-items:center;gap:10px;min-height:62px;flex-wrap
 .steps a:hover{background:var(--surface2)}
 .steps a.on{background:var(--ink);color:#fff}
 .steps a .n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;background:var(--c,var(--bleu));color:#fff;font-size:11px;font-weight:700}
-.steps a .n.done{background:var(--ok)}
+.steps a .n.done{background:var(--c,var(--bleu))}
 .dsel{display:flex;gap:6px;align-items:center;white-space:nowrap}
 .dsel select{border:1px solid var(--line);border-radius:10px;padding:6px 8px;max-width:170px;background:#fff;font-size:13px}
 .savepill{font-size:11px;padding:3px 9px;border-radius:999px;background:#e5f4ee;color:var(--ok);font-weight:600;white-space:nowrap}
@@ -77,6 +77,30 @@ section.view.on{display:block}
 .pstep .bar i{display:block;height:100%;background:#fff}
 .pstep.light{background:#fff;color:var(--ink);border:2px dashed var(--line)}
 .pstep.light .bar{background:var(--surface2)} .pstep.light .bar i{background:var(--vert)}
+/* FRISE chronologique */
+.frise{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:14px 16px 10px;margin:0 0 18px}
+.frise .ft{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.frise .ft b{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.frise .lg{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.frise .lg i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-2px;background:var(--bleu)}
+.frise .lg i.cur{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--bleu);margin-right:8px;margin-left:3px}
+.frise .lg i.todo{background:#fff;border:2px dashed var(--bleu);opacity:.55}
+.frise .fl{display:flex;overflow-x:auto;scrollbar-width:thin;padding:9px 0 4px}
+.fz{flex:1 0 0;min-width:96px;position:relative;text-align:center;text-decoration:none;color:var(--ink);padding:0 2px}
+.fz::before{content:"";position:absolute;top:19px;left:-50%;width:100%;height:6px;background:var(--surface2);z-index:0}
+.fz:first-child::before{display:none}
+.fz.done::before,.fz.cur::before{background:var(--c)}
+.fz .d{position:relative;z-index:1;width:44px;height:44px;border-radius:50%;margin:0 auto 6px;display:grid;place-items:center;font-weight:700;font-size:16px;color:#fff;background:var(--c);transition:.2s}
+.fz.cur .d{box-shadow:0 0 0 4px #fff,0 0 0 7px var(--c);transform:scale(1.06)}
+.fz.todo .d{background:#fff;color:var(--c);border:3px dashed var(--c);opacity:.5}
+.fz:hover .d{opacity:1}
+.fz b{display:block;font-size:12.5px;line-height:1.2}
+.fz span{display:block;font-size:11.5px;color:var(--muted);line-height:1.25}
+.fz.todo b{color:var(--muted)}
+.fz em{display:inline-block;white-space:nowrap;font-style:normal;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:999px;margin-top:4px;background:var(--surface2);color:var(--muted)}
+.fz.done em{color:var(--c);background:transparent;border:1px solid var(--c)}
+.fz.cur em{background:var(--c);color:#fff}
+.fz.on b{text-decoration:underline;text-underline-offset:3px}
 /* STEPHEAD */
 .stephead{display:flex;gap:18px;align-items:center;background:var(--c);color:#fff;border-radius:20px;padding:20px 24px;margin-bottom:16px}
 .stephead .num{width:58px;height:58px;border-radius:16px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:28px;font-weight:700;flex:none}
@@ -188,7 +212,7 @@ footer b{color:#fff}
   </div>
 </nav>
 
-<main><div class="wrap" id="app"></div></main>
+<main><div class="wrap noprint" id="frise"></div><div class="wrap" id="app"></div></main>
 
 <footer>
   <div class="wrap">
