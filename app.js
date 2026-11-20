@@ -34,17 +34,33 @@
   if (!store.dossiers[store.current]) store.current = Object.keys(store.dossiers)[0];
   let st = store.dossiers[store.current];
 
-  let saveT = null;
+  let saveT = null, saveErr = false;
   function save(now, nav) {
     if (!nav && st) st.updated = new Date().toISOString();
     const pill = $("#savepill");
     pill.textContent = "Enregistrement…"; pill.classList.add("wait");
+    const sb = $("#sb-auto"); if (sb) sb.innerHTML = "<b>⏳ Enregistrement en cours…</b>";
     clearTimeout(saveT);
     saveT = setTimeout(() => {
-      try { localStorage.setItem(LS_KEY, JSON.stringify(store)); pill.textContent = "Enregistré"; }
-      catch (e) { pill.textContent = "Non enregistré !"; }
+      try { localStorage.setItem(LS_KEY, JSON.stringify(store)); pill.textContent = "✓ Enregistré"; saveErr = false; }
+      catch (e) { pill.textContent = "Non enregistré !"; saveErr = true; }
       pill.classList.remove("wait");
+      renderSaveBar();
     }, now ? 0 : 400);
+  }
+  /* ---------------- BARRE DE SAUVEGARDE ---------------- */
+  function hhmm(iso) { if (!iso) return ""; const d = new Date(iso), t = new Date(); const h = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }); return d.toDateString() === t.toDateString() ? "aujourd'hui à " + h : d.toLocaleDateString("fr-FR") + " à " + h; }
+  function renderSaveBar() {
+    const bar = $("#savebar"); if (!bar || !st) return;
+    const pend = pendingImports();
+    const notSent = !st.exported || (st.updated && st.updated > st.exported);
+    bar.className = "noprint" + (notSent ? " todo" : "");
+    bar.innerHTML = `<div class="wrap">
+      <div class="sb-auto" id="sb-auto">${saveErr ? `<b style="color:var(--err)">⚠ Saisie NON enregistrée</b><small>Exportez le fichier tout de suite (bouton rose)</small>` : `<b>✓ Saisie enregistrée automatiquement</b><small>sur cet ordinateur${st.updated ? " · " + esc(hhmm(st.updated)) : ""}</small>`}</div>
+      ${pend.length ? `<button class="btn sb-imp" data-goimport="${pend[0].id}">⚠ Importer la réponse de Claude<small>${esc(pend[0].id === "s0" ? "Préparation" : "Atelier " + pend[0].num)} · onglet « Avec Claude »</small></button>` : ""}
+      <div class="sb-sp"><button class="btn rose sb-btn" data-save-sp>📁 Enregistrer dans SharePoint</button>
+        <small class="${notSent ? "warn" : "ok"}">${!st.exported ? "⚠ Jamais déposé dans SharePoint" : notSent ? "⚠ Modifications pas encore déposées (dernier dépôt " + esc(hhmm(st.exported)) + ")" : "✓ À jour dans SharePoint (" + esc(hhmm(st.exported)) + ")"}</small></div>
+    </div>`;
   }
   /* ---------------- DOSSIER SHAREPOINT ---------------- */
   function spUrl(d) { const u = ((d || st).m.sp || "").trim(); return /^https:\/\/[a-z0-9-]+\.sharepoint\.com\//i.test(u) ? u : ""; }
@@ -248,7 +264,7 @@
       : [["prep", "① Préparer"], ["seance", "② En séance"], ["releve", "③ Relevé de décisions"], ["claude", "④ Avec Claude"], ["note", "⑤ Note d'inter-séance"]];
     tab = tab && tabs.some((t) => t[0] === tab) ? tab : tabs[0][0];
     return `${stephead(s)}
-    <div class="tabs" style="--c:${s.couleur}">${tabs.map(([id, l]) => `<button class="tab ${tab === id ? "on" : ""}" data-tab="${sid}/${id}">${l}</button>`).join("")}</div>
+    <div class="tabs" style="--c:${s.couleur}">${tabs.map(([id, l]) => `<button class="tab ${tab === id ? "on" : ""}" data-tab="${sid}/${id}">${l}${id === "claude" && filled(st.f["_claudeResp_" + sid]) ? ` <span class="pendbadge" title="Réponse de Claude non importée">⚠</span>` : ""}</button>`).join("")}</div>
     <div style="--c:${s.couleur}">${{ prep: panePrep, seance: paneSeance, saisie: paneSaisie, releve: paneReleve, claude: paneClaude, note: paneNote }[tab](s)}</div>`;
   }
 
@@ -416,9 +432,10 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
       </div>
       <div class="card">
         <h4>3 · Collez la réponse JSON de Claude</h4>
-        <textarea rows="12" id="claudeResp" placeholder='{ "${s.fields[0] ? s.fields[0].k : "cle"}": "…" }'></textarea>
+        ${filled(st.f["_claudeResp_" + s.id]) ? `<div class="pendwarn">⚠ Cette réponse n'est pas encore importée : cliquez sur « Importer dans la trame » pour la ranger dans les onglets de l'atelier.</div>` : ""}
+        <textarea rows="12" id="claudeResp" data-k="_claudeResp_${s.id}" placeholder='{ "${s.fields[0] ? s.fields[0].k : "cle"}": "…" }'>${esc(st.f["_claudeResp_" + s.id] || "")}</textarea>
         <label class="row" style="margin:10px 0;font-size:14px"><input type="checkbox" id="claudeOverwrite"> Remplacer le contenu déjà saisi (sinon, seules les rubriques vides sont remplies)</label>
-        <button class="btn vert" data-import-claude="${s.id}">⬇ Importer dans la trame</button>
+        <button class="btn vert big" data-import-claude="${s.id}">⬇ Importer dans la trame</button>
         <div id="importRes" class="muted" style="margin-top:10px;font-size:13.5px"></div>
       </div>
     </div>`;
@@ -455,6 +472,10 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
       if (filled(d.suspens) && (over || !filled(r.suspens))) { r.suspens = Array.isArray(d.suspens) ? d.suspens.join("\n") : d.suspens; n++; }
       if (Array.isArray(d.actions)) { d.actions.forEach((a) => { if (filled(a.quoi)) { r.actions.push({ prio: a.prio || 1, quoi: a.quoi, qui: a.qui || "", quand: a.quand || "" }); n++; } }); }
     }
+    delete st.f["_claudeResp_" + sid];
+    $("#claudeResp").value = "";
+    const pw = document.querySelector(".pendwarn"); if (pw) pw.remove();
+    document.querySelectorAll(".pendbadge").forEach((x) => x.remove());
     save(true);
     $("#importRes").innerHTML = `<span style="color:var(--ok);font-weight:600">✓ ${n} élément(s) importé(s).</span> <a href="#${sid}/${sid === "s0" ? "saisie" : "seance"}">Relire dans la trame →</a>`;
     renderNav(); updateProgress();
@@ -947,7 +968,7 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     else if (view === "outils") html = viewOutils();
     else html = viewAccueil();
     $("#app").innerHTML = html;
-    renderNav();
+    renderNav(); renderSaveBar();
     if (SEQ[view]) { tick(); refreshEmarg(view); }
   }
   function rerender(keepScroll) { const y = window.scrollY; render(); if (keepScroll) window.scrollTo(0, y); }
@@ -955,7 +976,16 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     renderFrise();
     SEANCES.forEach((s) => { const p = progress(s.id); const a = $("#prog-" + s.id), b = $("#progbar-" + s.id); if (a) a.textContent = p + " %"; if (b) b.style.width = p + "%"; });
   }
-  window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });
+  function pendingImports() { return SEANCES.filter((s) => filled(st.f["_claudeResp_" + s.id])); }
+  function pendingMsg() { const p = pendingImports(); return p.length ? "Réponse de Claude non importée : " + p.map((s) => s.id === "s0" ? "Préparation" : "Atelier " + s.num).join(", ") : ""; }
+  let lastHash = location.hash;
+  window.addEventListener("hashchange", () => {
+    const prev = lastHash.replace("#", ""), sid = prev.split("/")[0];
+    lastHash = location.hash;
+    render(); window.scrollTo(0, 0);
+    if (prev.endsWith("/claude") && filled(st.f["_claudeResp_" + sid])) toast("⚠ Réponse de Claude non importée : revenez sur « Avec Claude » et cliquez sur « Importer dans la trame »");
+  });
+  window.addEventListener("beforeunload", (e) => { if (pendingImports().length) { e.preventDefault(); e.returnValue = pendingMsg(); return e.returnValue; } });
 
   /* ---------------- ÉVÉNEMENTS ---------------- */
   const app = $("#app");
@@ -992,15 +1022,29 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     if (d.tab) { location.hash = d.tab; return; }
     if (d.open) { switchTo(d.open); return; }
     if (d.send != null) { sendFemas(); return; }
-    if (d.saveSp != null) {
+    if (d.saveSp != null) return saveSp();
+  });
+  function saveSp() {
+    {
       const u = spUrl();
       if (!u) { toast("Renseignez d'abord le lien du dossier SharePoint dans l'onglet Dossier"); location.hash = "dossier"; return; }
+      if (pendingImports().length && !confirm(pendingMsg() + ".\n\nCliquez sur « Annuler » pour aller l'importer d'abord, ou sur « OK » pour enregistrer quand même.")) { const p = pendingImports()[0]; location.hash = p.id + "/claude"; return; }
       const w = window.open(u, "_blank"); if (w) w.opener = null;
       st.exported = new Date().toISOString(); save(true, true);
       downloadJSON("projet-sante-" + fileSlug(), { version: 1, dossiers: { [st.id]: st } });
       toast(w === null ? "Fichier exporté — autorisez les fenêtres pour ouvrir SharePoint" : "Fichier exporté : déposez-le dans « 00 - Données outil » (Remplacer)");
       return rerender(true);
     }
+  }
+  $("#savebar").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-save-sp],[data-goimport]"); if (!b) return;
+    if (b.dataset.goimport) { location.hash = b.dataset.goimport + "/claude"; setTimeout(() => { const t = $("#claudeResp"); if (t) { t.scrollIntoView({ block: "center" }); t.focus(); } }, 50); return; }
+    saveSp();
+  });
+  app.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-tab],[data-tool],[data-add-fiche],[data-del-fiche],[data-add-pro],[data-del-pro],[data-add-act],[data-del-act],[data-timer],[data-timer-reset],[data-copy-prompt],[data-import-claude],[data-export-note],[data-copy-note],[data-export-releve],[data-export-projet],[data-export-conf],[data-export-json],[data-del-dossier],[data-dup],[data-open],[data-send],[data-emarg-del],[data-emarg-resend],[data-copy-eq],[data-qr-emarg],[data-save-sp]");
+    if (!b) return;
+    const d = b.dataset;
     if (d.qrEmarg) { showQrEmarg(d.qrEmarg); return; }
     if (d.copyEq) { navigator.clipboard.writeText(d.copyEq).then(() => toast("Lien copié : collez-le dans votre message à l'équipe"), () => toast("Copie impossible")); return; }
     if (d.emargResend) { b.disabled = true; emargGet(d.emargResend).then((rec) => rec && emargSend(rec)).then((ok) => { toast(ok ? "Feuille transmise à la FEMAS" : "Envoi impossible, vérifiez la connexion"); refreshEmarg(d.emargSid); }); return; }
