@@ -1025,16 +1025,35 @@ ${st.f["_transcript_" + s.id] || "[colle ici la transcription Upmeet ou tes note
     if (d.saveSp != null) return saveSp();
   });
   function saveSp() {
-    {
-      const u = spUrl();
-      if (!u) { toast("Renseignez d'abord le lien du dossier SharePoint dans l'onglet Dossier"); location.hash = "dossier"; return; }
-      if (pendingImports().length && !confirm(pendingMsg() + ".\n\nCliquez sur « Annuler » pour aller l'importer d'abord, ou sur « OK » pour enregistrer quand même.")) { const p = pendingImports()[0]; location.hash = p.id + "/claude"; return; }
-      const w = window.open(u, "_blank"); if (w) w.opener = null;
-      st.exported = new Date().toISOString(); save(true, true);
-      downloadJSON("projet-sante-" + fileSlug(), { version: 1, dossiers: { [st.id]: st } });
-      toast(w === null ? "Fichier exporté — autorisez les fenêtres pour ouvrir SharePoint" : "Fichier exporté : déposez-le dans « 00 - Données outil » (Remplacer)");
-      return rerender(true);
-    }
+    const u = spUrl();
+    if (!u) { toast("Renseignez d'abord le lien du dossier SharePoint dans l'onglet Dossier"); location.hash = "dossier"; return; }
+    if (pendingImports().length && !confirm(pendingMsg() + ".\n\nCliquez sur « Annuler » pour aller l'importer d'abord, ou sur « OK » pour enregistrer quand même.")) { const p = pendingImports()[0]; location.hash = p.id + "/claude"; return; }
+    const fname = "projet-sante-" + fileSlug();
+    downloadJSON(fname, { version: 1, dossiers: { [st.id]: st } });
+    showSpGuide(u, fname + ".json");
+  }
+  function showSpGuide(u, fname) {
+    const old = $("#spOverlay"); if (old) old.remove();
+    const ov = document.createElement("div");
+    ov.id = "spOverlay";
+    ov.style.cssText = "position:fixed;inset:0;background:rgba(15,20,40,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";
+    ov.innerHTML = `<div class="spg">
+      <div class="spg-k">Enregistrer dans SharePoint</div>
+      <h2>Plus que 3 étapes pour sauvegarder <span>${esc(st.m.msp || "la MSP")}</span></h2>
+      <ol>
+        <li class="done"><b>Le fichier de sauvegarde vient d'être téléchargé ✓</b><br>Il s'appelle <code>${esc(fname)}</code> et se trouve dans vos <b>Téléchargements</b>. <span class="muted">(Si un numéro a été ajouté, par exemple « (1) », retirez-le en renommant le fichier.)</span></li>
+        <li><b>Ouvrez le dossier SharePoint de la MSP</b><br><button class="btn rose" data-sp-open>📁 Ouvrir le dossier SharePoint</button></li>
+        <li><b>Faites glisser le fichier dans le sous-dossier « 00 - Données outil »</b><br>Si SharePoint indique qu'un fichier du même nom existe déjà, choisissez <b>« Remplacer »</b>.</li>
+      </ol>
+      <p class="spg-tip">💡 Pour reprendre le travail sur un autre ordinateur : téléchargez ce fichier depuis SharePoint, puis dans l'outil, page <b>Outils</b> → <b>Importer</b>.</p>
+      <div class="row" style="justify-content:flex-end;gap:8px;flex-wrap:wrap"><button class="btn ghost" data-sp-again>⬇ Retélécharger le fichier</button><button class="btn vert" data-sp-close>J'ai déposé le fichier ✓</button></div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener("click", (e) => {
+      if (e.target.closest("[data-sp-open]")) { const w = window.open(u, "_blank"); if (w) w.opener = null; else toast("Autorisez les fenêtres pour ce site, puis réessayez"); return; }
+      if (e.target.closest("[data-sp-again]")) { downloadJSON(fname.replace(/\.json$/, ""), { version: 1, dossiers: { [st.id]: st } }); return; }
+      if (e.target === ov || e.target.closest("[data-sp-close]")) { ov.remove(); if (e.target.closest("[data-sp-close]")) { st.exported = new Date().toISOString(); save(true, true); rerender(true); toast("Merci ! Le dossier est sauvegardé dans SharePoint"); } }
+    });
   }
   $("#savebar").addEventListener("click", (e) => {
     const b = e.target.closest("[data-save-sp],[data-goimport]"); if (!b) return;

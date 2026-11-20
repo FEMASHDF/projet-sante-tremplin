@@ -35,6 +35,16 @@
 body{padding-bottom:90px}
 @media (max-width:640px){#savebar .wrap{padding:8px 12px;gap:8px}.sb-sp{flex-basis:100%}.sb-btn{width:100%}body{padding-bottom:150px}.toast{bottom:170px}}
 .savepill{font-size:13px!important;padding:5px 12px!important}
+.spg{background:#fff;border-radius:18px;padding:24px 26px;max-width:600px;width:100%;max-height:100%;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.spg-k{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#e5127d;font-weight:700}
+.spg h2{margin:4px 0 14px;font-size:20px;line-height:1.3}.spg h2 span{color:#e5127d}
+.spg ol{list-style:none;counter-reset:spg;padding:0;margin:0 0 14px}
+.spg li{counter-increment:spg;position:relative;padding:10px 0 12px 48px;border-bottom:1px solid var(--line);font-size:14.5px}
+.spg li:last-child{border-bottom:0}
+.spg li::before{content:counter(spg);position:absolute;left:0;top:10px;width:34px;height:34px;border-radius:50%;background:#e5127d;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+.spg li.done::before{content:"✓";background:var(--ok)}
+.spg li .btn{margin-top:8px}.spg code{background:var(--surface2);padding:1px 6px;border-radius:6px;font-size:13px}
+.spg-tip{background:var(--surface2);border-radius:10px;padding:10px 12px;font-size:13.5px;margin:0 0 14px}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;font-family:Poppins,system-ui,sans-serif;font-size:15px;line-height:1.55;color:var(--ink);background:var(--bg)}
